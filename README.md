@@ -4,7 +4,7 @@ no-nixpkgs standard library for the nix expression language.
 
 ## Usage
 
-```
+```nix
 with {
   std = import (builtins.fetchGit { url = "git@github.com:chessai/nix-std"; });
 };
