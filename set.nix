@@ -17,9 +17,9 @@ rec {
     then empty
     else match1 { inherit assign; } o;
 
+  # O(keys), sad!
   match1 = { assign }: o:
-    let ks = keys o;
-        k = list.head ks;
+    let k = list.head (keys o);
         v = o."${k}";
         r = filter (k': _: k != k') o;
     in assign k v r;
