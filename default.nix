@@ -13,4 +13,6 @@ rec {
   inherit (list) map for;
 
   set = import ./set.nix;
+
+  types = import ./types.nix;
 }
