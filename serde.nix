@@ -46,7 +46,7 @@ in rec {
       tomlTable = oldPrefix: k: v:
         let
           prefix = oldPrefix ++ [k];
-          rest = go (prefix ++ [k]) v;
+          rest = go prefix v;
         in "[${dots prefix}]" + string.optional (rest != "") "\n${rest}";
 
       # Render a TOML array of attrsets using [[]] notation. 'subtables' should
