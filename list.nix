@@ -1,6 +1,8 @@
-let
+with rec {
   function = import ./function.nix;
-in
+  inherit (function) flip compose;
+};
+
 rec {
   /* List functor object
   */
@@ -30,7 +32,7 @@ rec {
 
     /* bind :: [a] -> (a -> [b]) -> [b]
     */
-    bind = function.flip concatMap;
+    bind = flip concatMap;
   };
 
   /* List semigroup object
@@ -49,9 +51,9 @@ rec {
     empty = nil;
   };
 
-  /* match :: { nil :: b; cons :: a -> [a] -> b; } -> [a] -> b
+  /* match :: [a] -> { nil :: b; cons :: a -> [a] -> b; } -> b
   */
-  match = { nil, cons }@args: xs:
+  match = xs: { nil, cons }@args:
     let u = uncons xs;
     in if u.head == null
        then args.nil
@@ -81,21 +83,21 @@ rec {
 
   /* for :: [a] -> (a -> b) -> [b]
   */
-  for = function.flip map;
+  for = flip map;
 
   /* imap :: (int -> a -> b) -> [a] -> [b]
   */
-  imap = f: xs0:
+  imap = f:
     let go = i:
-          match {
+          (flip match) {
             nil = [];
             cons = x: xs: cons (f i x) (go (i + 1) xs);
           };
-    in go 0 xs0;
+    in go 0;
 
   /* ifor :: [a] -> (int -> a -> b) -> [b]
   */
-  ifor = function.flip imap;
+  ifor = flip imap;
 
   /* @partial
      elemAt :: [a] -> int -> a
@@ -147,12 +149,12 @@ rec {
 
   /* foldr :: (a -> b -> b) -> b -> [a] -> b
   */
-  foldr = k: z0: xs0:
-    let go = match {
+  foldr = k: z0:
+    let go = (flip match) {
           nil = z0;
           cons = x: xs: k x (go xs);
         };
-    in go xs0;
+    in go;
 
   /* foldl' :: (b -> a -> b) -> b -> [a] -> b
   */
@@ -160,7 +162,7 @@ rec {
 
   /* foldMap :: Monoid m => (a -> m) -> [a] -> m
   */
-  foldMap = m: f: foldr (function.compose m.append f) m.empty;
+  foldMap = m: f: foldr (compose m.append f) m.empty;
 
   /* concatMap :: (a -> [b]) -> [a] -> [b]
   */
@@ -202,4 +204,21 @@ rec {
   /* traverse :: Applicative f => (a -> f b) -> [a] -> [f b]
   */
   traverse = ap: f: foldr (x: ap.lift2 cons (f x)) (ap.pure nil);
+
+  /* zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
+  */
+  zipWith = f:
+    let go = xs0: ys0:
+          match xs0 {
+            nil = nil;
+            cons = x: xs: match ys0 {
+              nil = nil;
+              cons = y: ys: cons (f x y) (go xs ys);
+            };
+          };
+    in go;
+
+  /* zip :: [a] -> [b] -> [{ left :: a, right :: b }]
+  */
+  zip = zipWith (x: y: { left = x; right = y; });
 }

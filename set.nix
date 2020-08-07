@@ -12,16 +12,16 @@ rec {
   */
   assign = k: v: r: r // { "${k}" = v; };
 
-  match = { empty, assign }: o:
+  match = o: { empty, assign }:
     if o == {}
     then empty
-    else match1 { inherit assign; } o;
+    else match1 o { inherit assign; };
 
-  # O(keys), sad!
-  match1 = { assign }: o:
+  # O(log(keys))
+  match1 = o: { assign }:
     let k = list.head (keys o);
         v = o."${k}";
-        r = filter (k': _: k != k') o;
+        r = builtins.removeAttrs o [k];
     in assign k v r;
 
   /* keys :: set -> [key]
@@ -39,7 +39,7 @@ rec {
   /* traverse :: Applicative f => (value -> f
   */
   traverse = ap: f:
-    match {
+    (flip match) {
       empty = ap.pure empty;
       assign = k: v: r: ap.lift2 function.identity (ap.map (assign k) (f v)) (traverse ap f r);
     };
