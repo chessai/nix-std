@@ -10,6 +10,8 @@ rec {
   list = import ./list.nix;
   inherit (list) map for;
 
+  num = import ./num.nix;
+
   serde = import ./serde.nix;
 
   set = import ./set.nix;

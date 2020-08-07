@@ -69,6 +69,18 @@ rec {
   */
   tail = builtins.tail;
 
+  /* take :: int -> [a] -> [a]
+  */
+  take = n:
+    let go = i: (flip match) {
+          nil = nil;
+          cons = x: xs:
+            if i < n
+            then cons x (go (i + 1) xs)
+            else nil;
+        };
+    in go 0;
+
   /* length :: [a] -> int
   */
   length = builtins.length;
@@ -164,6 +176,10 @@ rec {
   */
   foldMap = m: f: foldr (compose m.append f) m.empty;
 
+  sum = foldl' (x: y: builtins.add x y) 0;
+
+  product = foldl' (x: y: builtins.mul x y) 1;
+
   /* concatMap :: (a -> [b]) -> [a] -> [b]
   */
   concatMap = builtins.concatMap;
@@ -218,7 +234,7 @@ rec {
           };
     in go;
 
-  /* zip :: [a] -> [b] -> [{ left :: a, right :: b }]
+  /* zip :: [a] -> [b] -> [{ _0 :: a, _1 :: b }]
   */
-  zip = zipWith (x: y: { left = x; right = y; });
+  zip = zipWith (x: y: { _0 = x; _1 = y; });
 }
