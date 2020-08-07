@@ -2,8 +2,6 @@ rec {
   bool = import ./bool.nix;
   inherit (bool) not ifThenElse;
 
-  codec = import ./codec.nix;
-
   fixpoints = import ./fixpoints.nix;
 
   function = import ./function.nix;
@@ -11,6 +9,8 @@ rec {
 
   list = import ./list.nix;
   inherit (list) map for;
+
+  serde = import ./serde.nix;
 
   set = import ./set.nix;
 
