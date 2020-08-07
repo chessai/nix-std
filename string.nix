@@ -44,7 +44,7 @@ in rec {
 
   /* toChars :: string -> [string]
   */
-  toChars = str: list.generate (length str) (i: substring i 1 str);
+  toChars = str: list.generate (i: substring i 1 str) (length str);
 
   /* Map over a string, applying a function to each character
      map :: (string -> string) -> string -> string
@@ -114,13 +114,13 @@ in rec {
   */
   optional = b: str: if b then str else "";
 
-  /* lowerChars :: string
+  /* lowerChars :: [string]
   */
-  lowerChars = "abcdefghijklmnopqrstuvwxyz";
+  lowerChars = toChars "abcdefghijklmnopqrstuvwxyz";
 
-  /* upperChars :: string
+  /* upperChars :: [string]
   */
-  upperChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  upperChars = toChars "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
   /* toLower :: string -> string
   */
