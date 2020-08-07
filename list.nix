@@ -211,11 +211,11 @@ rec {
     then []
     else generate (n: first + n) (last - first + 1);
 
-  /* parition :: (a -> bool) -> [a] -> { sat :: [a], unsat :: [a] }
+  /* parition :: (a -> bool) -> [a] -> ([a], [a])
   */
   partition = p: xs:
     let bp = builtins.partition p xs;
-    in { sat = bp.right; unset = bp.wrong; };
+    in { _0 = bp.right; _1 = bp.wrong; };
 
   /* traverse :: Applicative f => (a -> f b) -> [a] -> [f b]
   */
