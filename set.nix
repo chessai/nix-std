@@ -1,9 +1,18 @@
-with {
+with rec {
   function = import ./function.nix;
+  inherit (function) identity;
   list = import ./list.nix;
 };
 
 rec {
+  semigroup = {
+    append = x: y: x // y;
+  };
+
+  monoid = semigroup // {
+    inherit empty;
+  };
+
   /* empty :: set
   */
   empty = {};
@@ -41,6 +50,6 @@ rec {
   traverse = ap: f:
     (flip match) {
       empty = ap.pure empty;
-      assign = k: v: r: ap.lift2 function.identity (ap.map (assign k) (f v)) (traverse ap f r);
+      assign = k: v: r: ap.lift2 identity (ap.map (assign k) (f v)) (traverse ap f r);
     };
 }
