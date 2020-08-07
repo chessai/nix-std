@@ -52,4 +52,8 @@ rec {
       empty = ap.pure empty;
       assign = k: v: r: ap.lift2 identity (ap.map (assign k) (f v)) (traverse ap f r);
     };
+
+  /* toList :: set -> [(key, value)]
+  */
+  toList = s: list.map (k: { name = k; value = s.${k}; }) (keys s);
 }
