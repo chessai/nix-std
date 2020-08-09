@@ -10,7 +10,7 @@ rec {
   /* abs :: Num a => a -> a
   */
   abs = x:
-    if x > 0
+    if x >= 0
     then x
     else negate x;
 
