@@ -55,5 +55,5 @@ rec {
 
   /* toList :: set -> [(key, value)]
   */
-  toList = s: list.map (k: { name = k; value = s.${k}; }) (keys s);
+  toList = s: list.map (k: { _0 = k; _1 = s.${k}; }) (keys s);
 }
