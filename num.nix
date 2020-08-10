@@ -21,6 +21,11 @@ rec {
     then 1
     else (if x < 0 then (-1) else 0);
 
+  min = x: y:
+    if x <= y
+    then x
+    else y;
+
   /* divMod :: Integral a => a -> a -> (a, a)
   */
   divMod = n: d:
