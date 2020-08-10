@@ -1,5 +1,6 @@
 with {
   list = import ./list.nix;
+  string = import ./string.nix;
 };
 
 rec {
@@ -25,6 +26,8 @@ rec {
     if x <= y
     then x
     else y;
+
+  mod = base: int: base - (int * (builtins.div base int));
 
   /* divMod :: Integral a => a -> a -> (a, a)
   */
@@ -54,10 +57,23 @@ rec {
              else (pow' base (exponent - 1) (value * base));
     in pow' base0 exponent0 base0;
 
+  /* TODO: make this 32-bit :( */
   pi = 3.141592653589793238;
 
   toFloat = x:
     if builtins.isFloat x
     then x
     else builtins.fromJSON "${builtins.toString x}.0";
+
+  /* may god have mercy on my soul. */
+  floor = f:
+    let chars = string.toChars (builtins.toJSON f);
+        searcher = n: c:
+          if n.found
+          then n
+          else if c == "."
+               then { index = n.index; found = true; }
+               else { index = n.index + 1; found = false; };
+        radix = (list.foldl' searcher { index = 0; found = false; } chars).index;
+    in builtins.fromJSON (string.concat (list.take radix chars));
 }
