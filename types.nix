@@ -4,6 +4,10 @@ with rec {
 
   list = import ./list.nix;
 
+  num = import ./num.nix;
+
+  set = import ./set.nix;
+
   string = import ./string.nix;
 };
 
@@ -13,13 +17,18 @@ let
     if x == true
     then "true"
     else "false";
-  showFloat = _: "";
+  showFloat = builtins.toString;
   showFunction = const "<<lambda>>";
   showInt = builtins.toString;
   showList = ls: "[ " + string.concatSep ", " (list.map show ls) + " ]";
   showNull = const "null";
   showPath = builtins.toString;
-  showSet = const "<<set>>";
+  showSet = s:
+    let showKey = k:
+          let v = s.${k};
+          in "${k} = ${show v};";
+        body = string.intercalate " " (list.map showKey (set.keys s));
+    in "{ " + body + " }";
   showString = s: "\"" + s + "\"";
   show = x:
     let /* shows :: [{ isType :: a -> bool, showType :: a -> string }]*/
