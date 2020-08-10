@@ -16,5 +16,7 @@ rec {
 
   set = import ./set.nix;
 
+  string = import ./string.nix;
+
   types = import ./types.nix;
 }
