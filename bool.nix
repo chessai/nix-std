@@ -1,4 +1,12 @@
 rec {
+  /* true :: bool
+  */
+  true = builtins.true;
+
+  /* false :: bool
+  */
+  false = builtins.false;
+
   /* not :: bool -> bool
   */
   not = x: !x;
