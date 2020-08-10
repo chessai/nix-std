@@ -1,6 +1,9 @@
 with rec {
   function = import ./function.nix;
-  inherit (function) flip compose;
+  inherit (function) flip compose identity;
+
+  num = import ./num.nix;
+  inherit (num) min;
 };
 
 rec {
@@ -14,10 +17,13 @@ rec {
 
   /* List applicative object
   */
-  applicative = functor // {
+  applicative = functor // rec {
     /* pure :: a -> [a]
     */
     pure = singleton;
+    /* ap :: [a -> b] -> [a] -> [b]
+    */
+    ap = lift2 identity;
     /* lift2 :: (a -> b -> c) -> [a] -> [b] -> [c]
     */
     lift2 = f: xs: ys: monad.bind xs (x: monad.bind ys (y: singleton (f x y)));
@@ -55,9 +61,9 @@ rec {
   */
   match = xs: { nil, cons }@args:
     let u = uncons xs;
-    in if u.head == null
+    in if u._0 == null
        then args.nil
-       else args.cons u.head u.tail;
+       else args.cons u._0 u._1;
 
   /* @partial
      head :: [a] -> a
@@ -71,15 +77,9 @@ rec {
 
   /* take :: int -> [a] -> [a]
   */
-  take = n:
-    let go = i: (flip match) {
-          nil = nil;
-          cons = x: xs:
-            if i < n
-            then cons x (go (i + 1) xs)
-            else nil;
-        };
-    in go 0;
+  take = n: xs:
+    let len = min n (length xs);
+    in generate (index xs) len;
 
   /* length :: [a] -> int
   */
@@ -99,13 +99,9 @@ rec {
 
   /* imap :: (int -> a -> b) -> [a] -> [b]
   */
-  imap = f:
-    let go = i:
-          (flip match) {
-            nil = [];
-            cons = x: xs: cons (f i x) (go (i + 1) xs);
-          };
-    in go 0;
+  imap = f: xs:
+    let len = length xs;
+    in generate (i: f i (index xs i)) len;
 
   /* ifor :: [a] -> (int -> a -> b) -> [b]
   */
@@ -149,11 +145,11 @@ rec {
   */
   cons = x: xs: [x] ++ xs;
 
-  /* uncons :: [a] -> { head: Maybe a, tail: [a] }
+  /* uncons :: [a] -> (Maybe a, [a])
   */
   uncons = xs: if (length xs == 0)
-    then { head = null; tail = []; }
-    else { head = builtins.head xs; tail = builtins.tail xs; };
+    then { _0 = null; _1 = []; }
+    else { _0 = builtins.head xs; _1 = builtins.tail xs; };
 
   /* snoc :: [a] -> a -> [a]
   */
@@ -161,12 +157,13 @@ rec {
 
   /* foldr :: (a -> b -> b) -> b -> [a] -> b
   */
-  foldr = k: z0:
-    let go = (flip match) {
-          nil = z0;
-          cons = x: xs: k x (go xs);
-        };
-    in go;
+  foldr = k: z0: xs:
+    let len = length xs;
+        go = n:
+          if n == len
+          then z0
+          else k (index xs n) (go (n + 1));
+    in go 0;
 
   /* foldl' :: (b -> a -> b) -> b -> [a] -> b
   */
@@ -223,16 +220,9 @@ rec {
 
   /* zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
   */
-  zipWith = f:
-    let go = xs0: ys0:
-          match xs0 {
-            nil = nil;
-            cons = x: xs: match ys0 {
-              nil = nil;
-              cons = y: ys: cons (f x y) (go xs ys);
-            };
-          };
-    in go;
+  zipWith = f: xs0: ys0:
+    let len = min (length xs0) (length ys0);
+    in generate (n: f (index xs0 n) (index ys0 n)) len;
 
   /* zip :: [a] -> [b] -> [{ _0 :: a, _1 :: b }]
   */
