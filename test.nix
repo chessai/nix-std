@@ -97,6 +97,8 @@ let
 
   sections = {
     bool = section "std.bool" {
+      true = assertEqual builtins.true bool.true;
+      false = assertEqual builtins.false bool.false;
       not = string.concatSep "\n" [
         (assertEqual (bool.not false) true)
         (assertEqual (bool.not true) false)
@@ -166,6 +168,10 @@ let
 
       notElem = assertEqual builtins.true (list.notElem "foo" ["texas" "friend" "amigo"]);
 
+    };
+
+    fixpoints = section "std.fixpoints" {
+      until = assertEqual 54 (fixpoints.until (x: num.mod x 2 == 0) (builtins.mul 3) 1);
     };
   };
 in
