@@ -1,6 +1,13 @@
 let
   list = import ./list.nix;
 in rec {
+  semigroup = {
+    append = x: y: x + y;
+  };
+
+  monoid = semigroup // {
+    empty = "";
+  };
 
   /* Take a substring of a string at an offset with a given length
      substring :: int -> int -> string -> string
