@@ -1,6 +1,6 @@
 rec {
   bool = import ./bool.nix;
-  inherit (bool) not ifThenElse;
+  inherit (bool) true false not ifThenElse;
 
   fixpoints = import ./fixpoints.nix;
 
