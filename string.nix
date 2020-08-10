@@ -1,6 +1,11 @@
-let
+with rec {
+  function = import ./function.nix;
+  inherit (function) flip;
+
   list = import ./list.nix;
-in rec {
+};
+
+rec {
   semigroup = {
     append = x: y: x + y;
   };
@@ -136,4 +141,29 @@ in rec {
   /* toUpper :: string -> string
   */
   toUpper = replace lowerChars upperChars;
+
+  /* lines :: string -> [string]
+  */
+  lines = throw "TODO";
+
+  /* unlines :: [string] -> string
+  */
+  unlines =
+    let go = flip list.match {
+          nil = "";
+          cons = l: ls: l + "\n" + go ls;
+        };
+    in go;
+
+  /* intercalate :: string -> [string] -> string
+  */
+  intercalate = str:
+    let go = flip list.match {
+          nil = "";
+          cons = l: ls: list.match ls {
+            nil = l;
+            cons = _: _: l + str + go ls;
+          };
+        };
+    in go;
 }
