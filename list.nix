@@ -241,7 +241,7 @@ rec {
     let len = min (length xs0) (length ys0);
     in generate (n: f (index xs0 n) (index ys0 n)) len;
 
-  /* zip :: [a] -> [b] -> [{ _0 :: a, _1 :: b }]
+  /* zip :: [a] -> [b] -> [(a, b)]
   */
   zip = zipWith (x: y: { _0 = x; _1 = y; });
 }
