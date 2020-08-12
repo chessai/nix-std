@@ -249,6 +249,37 @@ let
       ];
     };
 
+    regex = section "std.regex" {
+      match = string.unlines [
+        (assertEqual
+          (regex.match "([[:alpha:]]+)([[:digit:]]+)" "foo123")
+          ["foo" "123"])
+        (assertEqual
+          (regex.match "([[:alpha:]]+)([[:digit:]]+)" "foobar")
+          null)
+      ];
+
+      allMatches = assertEqual (regex.allMatches "[[:digit:]]+" "foo 123 bar 456") ["123" "456"];
+
+      firstMatch = string.unlines [
+        (assertEqual (regex.firstMatch "[aeiou]" "foobar") "o")
+        (assertEqual (regex.firstMatch "[aeiou]" "xyzzyx") null)
+      ];
+
+      lastMatch = string.unlines [
+        (assertEqual (regex.lastMatch "[aeiou]" "foobar") "a")
+        (assertEqual (regex.lastMatch "[aeiou]" "xyzzyx") null)
+      ];
+
+      split = assertEqual (regex.split "(,)" "1,2,3") ["1" [","] "2" [","] "3"];
+
+      splitOn = assertEqual (regex.splitOn "(,)" "1,2,3") ["1" "2""3"];
+
+      substituteWith = assertEqual (regex.substituteWith "([[:digit:]])" (g: builtins.toJSON (builtins.fromJSON (builtins.head g) + 1)) "123") "234";
+
+      substitute = assertEqual (regex.substitute "[aeiou]" "\\0\\0" "foobar") "foooobaar";
+    };
+
     fixpoints = section "std.fixpoints" {
       fix = string.unlines [
         (assertEqual 0 (fixpoints.fix (const 0)))
