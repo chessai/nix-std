@@ -1,6 +1,6 @@
 with rec {
   function = import ./function.nix;
-  inherit (function) flip compose identity;
+  inherit (function) const flip compose identity;
 
   num = import ./num.nix;
   inherit (num) min;
@@ -39,6 +39,15 @@ rec {
     /* bind :: [a] -> (a -> [b]) -> [b]
     */
     bind = flip concatMap;
+  };
+
+  monadFix = monad // {
+    /* fix :: (a -> [a]) -> [a]
+    */
+    fix = f: match (fix (compose f head)) {
+      nil = nil;
+      cons = x: _: cons x (fix (compose tail f));
+    };
   };
 
   /* List semigroup object
@@ -173,8 +182,12 @@ rec {
   */
   foldMap = m: f: foldr (compose m.append f) m.empty;
 
+  /* sum :: [number] -> number
+  */
   sum = foldl' (x: y: builtins.add x y) 0;
 
+  /* product :: [number] -> number
+  */
   product = foldl' (x: y: builtins.mul x y) 1;
 
   /* concatMap :: (a -> [b]) -> [a] -> [b]
@@ -201,6 +214,10 @@ rec {
   */
   optionals = b: xs: if b then xs else [];
 
+  /* replicate :: int -> a -> [a]
+  */
+  replicate = n: x: generate (const x) n;
+
   /* range :: int -> int -> [int]
   */
   range = first: last:
@@ -214,7 +231,7 @@ rec {
     let bp = builtins.partition p xs;
     in { _0 = bp.right; _1 = bp.wrong; };
 
-  /* traverse :: Applicative f => (a -> f b) -> [a] -> [f b]
+  /* traverse :: Applicative f => (a -> f b) -> [a] -> f [b]
   */
   traverse = ap: f: foldr (x: ap.lift2 cons (f x)) (ap.pure nil);
 

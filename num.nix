@@ -4,6 +4,8 @@ with {
 };
 
 rec {
+  inherit (builtins) add mul;
+
   /* negate :: Num a => a -> a
   */
   negate = x: 0 - x;
@@ -28,6 +30,10 @@ rec {
     else y;
 
   mod = base: int: base - (int * (builtins.div base int));
+
+  even = x: mod x 2 == 0;
+
+  odd = x: mod x 2 == 1;
 
   /* divMod :: Integral a => a -> a -> (a, a)
   */
