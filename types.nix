@@ -19,14 +19,14 @@ let
   showFloat = builtins.toString;
   showFunction = const "<<lambda>>";
   showInt = builtins.toString;
-  showList = ls: "[ " + string.concatSep ", " (list.map show ls) + " ]";
+  showList = ls: "[ " + imports.string.concatSep ", " (imports.list.map showInternal ls) + " ]";
   showNull = const "null";
   showPath = builtins.toString;
   showSet = s:
     let showKey = k:
           let v = s.${k};
-          in "${k} = ${show v};";
-        body = string.intercalate " " (list.map showKey (set.keys s));
+          in "${k} = ${showInternal v};";
+        body = imports.string.intercalate " " (imports.list.map showKey (imports.set.keys s));
     in "{ " + body + " }";
   showString = s: "\"" + s + "\"";
   showInternal = x:
@@ -44,7 +44,7 @@ let
         ];
 
         /* show' :: a -> string */
-        show' = (list.foldr
+        show' = (imports.list.foldr
           (c: n: if n.isType x then n else c)
           ({ isType = const false; showType = builtins.toString; })
           shows).showType;

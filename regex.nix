@@ -4,6 +4,31 @@ with rec {
 };
 
 rec {
+  /* escape :: string -> regex
+
+     Turn a string into a regular expression matching the exact string. Escapes
+     any special characters used in regular expressions.
+
+     > regex.escape "a+b"
+     "a\\+b"
+
+     For example, to see if a string is contained in another string:
+
+     > regex.firstMatch (regex.escape "a+b") "a+b+c" != null;
+     true
+  */
+  escape = string.escape ["\\" "^" "$" "." "+" "*" "?" "|" "(" ")" "[" "{" "}"];
+
+  /* capture :: regex -> regex
+
+     Turn a regex into a capturing regex. Simply wraps the entire regex in a
+     capture group.
+
+     > regex.capture "foo"
+     "(foo)"
+  */
+  capture = re: "(${re})";
+
   /* match :: regex -> string -> Maybe [string]
 
      Test if a string matches a regular expression exactly. The output is null
@@ -44,7 +69,7 @@ rec {
      [ "123" "456" ]
   */
   allMatches = regex: str:
-    list.concatMap (g: if builtins.isList g then [(list.head g)] else []) (split "(${regex})" str);
+    list.concatMap (g: if builtins.isList g then [(list.head g)] else []) (split (capture regex) str);
 
   /* firstMatch :: regex -> string -> Maybe string
 
@@ -57,7 +82,7 @@ rec {
      null
   */
   firstMatch = regex: str:
-    let res = split "(${regex})" str;
+    let res = split (capture regex) str;
     in if list.length res > 1
       then list.head (list.index res 1)
       else null;
@@ -74,7 +99,7 @@ rec {
   */
   lastMatch = regex: str:
     let
-      res = split "(${regex})" str;
+      res = split (capture regex) str;
       len = list.length res;
     in if len > 1
       then list.head (list.index res (len - 2))
@@ -149,5 +174,5 @@ rec {
               then list.index captures (builtins.fromJSON (list.head group))
               else group;
         in string.concatMap replaceGroup subs;
-    in substituteWith "(${regex})" replaceCaptures;
+    in substituteWith (capture regex) replaceCaptures;
 }
