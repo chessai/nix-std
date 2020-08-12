@@ -29,6 +29,11 @@ rec {
     then x
     else y;
 
+  max = x: y:
+    if x <= y
+    then y
+    else x;
+
   mod = base: int: base - (int * (builtins.div base int));
 
   even = x: mod x 2 == 0;

@@ -244,4 +244,10 @@ rec {
   /* zip :: [a] -> [b] -> [(a, b)]
   */
   zip = zipWith (x: y: { _0 = x; _1 = y; });
+
+  /* reverse :: [a] -> [a]
+  */
+  reverse = xs:
+    let len = length xs;
+    in generate (n: index xs (len - n - 1)) len;
 }
