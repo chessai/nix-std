@@ -13,11 +13,11 @@ rec {
 
   maybe = import ./maybe.nix;
 
-  monoids = import ./monoids.nix;
+  monoid = import ./monoid.nix;
 
   num = import ./num.nix;
 
-  semigroups = import ./semigroups.nix;
+  semigroup = import ./semigroup.nix;
 
   serde = import ./serde.nix;
 

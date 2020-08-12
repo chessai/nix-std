@@ -4,39 +4,39 @@ with {
 
   list = import ./list.nix;
 
-  semigroups = import ./semigroups.nix;
+  semigroup = import ./semigroup.nix;
 };
 
 {
-  first = semigroups.first // {
+  first = semigroup.first // {
     empty = null;
   };
 
-  last = semigroups.last // {
+  last = semigroup.last // {
     empty = null;
   };
 
-  min = semigroups.min // {
+  min = semigroup.min // {
     empty = null;
   };
 
-  max = semigroups.max // {
+  max = semigroup.max // {
     empty = max;
   };
 
-  dual = monoid: semigroups.dual monoid // {
+  dual = monoid: semigroup.dual monoid // {
     empty = monoid.empty
   };
 
-  endo = semigroups.endo // {
+  endo = semigroup.endo // {
     empty = id;
   };
 
-  all = semigroups.all // {
+  all = semigroup.all // {
     empty = true;
   };
 
-  and = semigroups.and // {
+  and = semigroup.and // {
     empty = false;
   };
 
