@@ -1,4 +1,6 @@
 rec {
+  applicative = import ./applicative.nix;
+
   bool = import ./bool.nix;
   inherit (bool) true false not ifThenElse;
 
@@ -8,10 +10,14 @@ rec {
   function = import ./function.nix;
   inherit (function) compose const flip id;
 
+  functor = import ./functor.nix;
+
   list = import ./list.nix;
   inherit (list) map for;
 
   maybe = import ./maybe.nix;
+
+  monad = import ./monad.nix;
 
   monoid = import ./monoid.nix;
 
