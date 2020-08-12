@@ -1,7 +1,7 @@
 rec {
-  /* identity :: a -> a
+  /* id :: a -> a
   */
-  identity = x: x;
+  id = x: x;
 
   /* const :: a -> b -> a
   */

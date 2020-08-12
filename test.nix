@@ -31,7 +31,7 @@ let
 
   functorIdentity = functor: xs:
     assertEqual
-      (functor.map function.identity xs)
+      (functor.map id xs)
       xs;
 
   functorComposition = functor: f: g: xs:
@@ -41,7 +41,7 @@ let
 
   applicativeIdentity = applicative: v:
     assertEqual
-      (applicative.ap (applicative.pure identity) v)
+      (applicative.ap (applicative.pure id) v)
       v;
 
   /* applicativeComposition :: (Applicative f)
@@ -169,7 +169,7 @@ let
       notElem = assertEqual builtins.true (list.notElem "foo" ["texas" "friend" "amigo"]);
 
       generate = string.unlines [
-        (assertEqual (list.range 0 4) (list.generate identity 5))
+        (assertEqual (list.range 0 4) (list.generate id 5))
       ];
 
       nil = assertEqual [] list.nil;
@@ -192,11 +192,11 @@ let
             };
             endo = {
               append = compose;
-              empty = identity;
+              empty = id;
             };
         in string.unlines [
-             (assertEqual 1 (list.foldMap first identity (list.range 1 10)))
-             (assertEqual 321 ((list.foldMap endo identity [ (x: builtins.mul x 3) (x: builtins.add x 7) (x: num.pow x 2) ]) 10))
+             (assertEqual 1 (list.foldMap first id (list.range 1 10)))
+             (assertEqual 321 ((list.foldMap endo id [ (x: builtins.mul x 3) (x: builtins.add x 7) (x: num.pow x 2) ]) 10))
            ];
 
       sum = assertEqual 55 (list.sum (list.range 1 10));
@@ -219,7 +219,7 @@ let
         (assertEqual true (list.all (const false) []))
       ];
 
-      count = assertEqual 11 (list.count num.even (list.generate identity 21));
+      count = assertEqual 11 (list.count num.even (list.generate id 21));
 
       optional = string.unlines [
         (assertEqual [] (list.optional false null))
@@ -244,27 +244,9 @@ let
 
       zip = assertEqual [ { _0 = "foo"; _1 = 0; } { _0 = "foo"; _1 = 1; } { _0 = "foo"; _1 = 2; } ] (list.zip (list.replicate 10 "foo") (list.range 0 2));
 
-      traverse =
-        let maybe = rec {
-              map = f: x:
-                if x == null
-                then null
-                else f x;
-
-              pure = identity;
-
-              ap = lift2 identity;
-
-              lift2 = f: x: y:
-                if x == null
-                then null
-                else if y == null
-                     then null
-                     else f x y;
-            };
-        in string.unlines [
-             (let ls = list.range 1 10; in assertEqual ls (list.traverse maybe (x: if (num.even x || num.odd x) then x else null) ls))
-           ];
+      traverse = string.unlines [
+        (let ls = list.range 1 10; in assertEqual ls (list.traverse maybe.applicative (x: if (num.even x || num.odd x) then x else null) ls))
+      ];
     };
 
     fixpoints = section "std.fixpoints" {
