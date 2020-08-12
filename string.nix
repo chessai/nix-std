@@ -3,6 +3,7 @@ with rec {
   inherit (function) flip;
 
   list = import ./list.nix;
+  regex = import ./regex.nix;
 };
 
 rec {
@@ -144,7 +145,14 @@ rec {
 
   /* lines :: string -> [string]
   */
-  lines = throw "TODO";
+  lines = str:
+    let
+      len = length str;
+      str' =
+        if substring (len - 1) 1 str == "\n"
+          then substring 0 (len - 1) str
+          else str;
+    in regex.splitOn "\n" str';
 
   /* unlines :: [string] -> string
   */
