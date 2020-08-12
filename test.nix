@@ -247,6 +247,11 @@ let
       traverse = string.unlines [
         (let ls = list.range 1 10; in assertEqual ls (list.traverse maybe.applicative (x: if (num.even x || num.odd x) then x else null) ls))
       ];
+
+      reverse = string.unlines [
+        (assertEqual (list.reverse [1 2 3]) [3 2 1])
+        (assertEqual (list.reverse []) [])
+      ];
     };
 
     string = section "std.string" {
