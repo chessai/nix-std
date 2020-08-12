@@ -23,6 +23,8 @@ rec {
 
   num = import ./num.nix;
 
+  regex = import ./regex.nix;
+
   semigroup = import ./semigroup.nix;
 
   serde = import ./serde.nix;
