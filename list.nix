@@ -1,6 +1,6 @@
 with rec {
   function = import ./function.nix;
-  inherit (function) const flip compose;
+  inherit (function) const flip compose id;
 
   num = import ./num.nix;
   inherit (num) min;

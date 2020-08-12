@@ -1,4 +1,4 @@
-with {
+with rec {
   function = import ./function.nix;
   inherit (function) id;
 };
