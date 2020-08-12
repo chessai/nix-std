@@ -185,19 +185,10 @@ let
 
       foldl' = assertEqual 3628800 (list.foldl' builtins.mul 1 (list.range 1 10));
 
-      foldMap =
-        let first = {
-              append = x: _: x;
-              empty = null;
-            };
-            endo = {
-              append = compose;
-              empty = id;
-            };
-        in string.unlines [
-             (assertEqual 1 (list.foldMap first id (list.range 1 10)))
-             (assertEqual 321 ((list.foldMap endo id [ (x: builtins.mul x 3) (x: builtins.add x 7) (x: num.pow x 2) ]) 10))
-           ];
+      foldMap = string.unlines [
+        (assertEqual 1 (list.foldMap monoid.first id (list.range 1 10)))
+        (assertEqual 321 ((list.foldMap monoid.endo id [ (x: builtins.mul x 3) (x: builtins.add x 7) (x: num.pow x 2) ]) 10))
+      ];
 
       sum = assertEqual 55 (list.sum (list.range 1 10));
 
@@ -240,9 +231,13 @@ let
         (assertEqual { _0 = ["foo" "fum"]; _1 = ["haha"]; } (list.partition (string.hasPrefix "f") ["foo" "fum" "haha"]))
       ];
 
-      zipWith = assertEqual ["foo-0" "foo-1" "foo-2"] (list.zipWith (s: i: s + "-" + builtins.toString i) (list.replicate 10 "foo") (list.range 0 2));
+      zipWith = assertEqual
+        ["foo-0" "foo-1" "foo-2"]
+        (list.zipWith (s: i: s + "-" + builtins.toString i) (list.replicate 10 "foo") (list.range 0 2));
 
-      zip = assertEqual [ { _0 = "foo"; _1 = 0; } { _0 = "foo"; _1 = 1; } { _0 = "foo"; _1 = 2; } ] (list.zip (list.replicate 10 "foo") (list.range 0 2));
+      zip = assertEqual
+        [{ _0 = "foo"; _1 = 0; } { _0 = "foo"; _1 = 1; } { _0 = "foo"; _1 = 2; }]
+        (list.zip (list.replicate 10 "foo") (list.range 0 2));
 
       traverse = string.unlines [
         (let ls = list.range 1 10; in assertEqual ls (list.traverse maybe.applicative (x: if (num.even x || num.odd x) then x else null) ls))
