@@ -148,22 +148,9 @@ rec {
 
   /* unlines :: [string] -> string
   */
-  unlines =
-    let go = flip list.match {
-          nil = "";
-          cons = l: ls: l + "\n" + go ls;
-        };
-    in go;
+  unlines = concatSep "\n";
 
   /* intercalate :: string -> [string] -> string
   */
-  intercalate = str:
-    let go = flip list.match {
-          nil = "";
-          cons = l: ls: list.match ls {
-            nil = l;
-            cons = _: _: l + str + go ls;
-          };
-        };
-    in go;
+  intercalate = concatSep;
 }
