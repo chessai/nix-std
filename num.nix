@@ -66,10 +66,7 @@ rec {
   /* TODO: make this 32-bit :( */
   pi = 3.141592653589793238;
 
-  toFloat = x:
-    if builtins.isFloat x
-    then x
-    else builtins.fromJSON "${builtins.toString x}.0";
+  toFloat = x: x + 0.0;
 
   /* may god have mercy on my soul. */
   floor = f:
