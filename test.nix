@@ -250,6 +250,10 @@ let
     };
 
     regex = section "std.regex" {
+      escape = assertEqual (regex.escape "^([+*])$") ''\^\(\[\+\*\]\)\$'';
+
+      capture = assertEqual (regex.capture "foo") "(foo)";
+
       match = string.unlines [
         (assertEqual
           (regex.match "([[:alpha:]]+)([[:digit:]]+)" "foo123")
