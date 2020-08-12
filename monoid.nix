@@ -1,4 +1,4 @@
-with {
+with rec {
   function = import ./function.nix;
   inherit (function) compose id flip;
 
@@ -25,7 +25,7 @@ with {
   };
 
   dual = monoid: semigroup.dual monoid // {
-    empty = monoid.empty
+    empty = monoid.empty;
   };
 
   endo = semigroup.endo // {
