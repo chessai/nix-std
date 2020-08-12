@@ -24,11 +24,15 @@ rec {
     then 1
     else (if x < 0 then (-1) else 0);
 
+  /* min :: number -> number -> number
+  */
   min = x: y:
     if x <= y
     then x
     else y;
 
+  /* max :: number -> number -> number
+  */
   max = x: y:
     if x <= y
     then y
@@ -36,8 +40,12 @@ rec {
 
   mod = base: int: base - (int * (builtins.div base int));
 
+  /* even :: integer -> bool
+  */
   even = x: mod x 2 == 0;
 
+  /* odd :: integer -> bool
+  */
   odd = x: mod x 2 == 1;
 
   /* divMod :: Integral a => a -> a -> (a, a)
