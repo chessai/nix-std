@@ -1,6 +1,6 @@
 with rec {
   function = import ./function.nix;
-  inherit (function) const identity;
+  inherit (function) const;
 
   list = import ./list.nix;
 

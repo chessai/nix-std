@@ -1,6 +1,6 @@
 with rec {
   function = import ./function.nix;
-  inherit (function) const flip compose identity;
+  inherit (function) const flip compose;
 
   num = import ./num.nix;
   inherit (num) min;
@@ -23,7 +23,7 @@ rec {
     pure = singleton;
     /* ap :: [a -> b] -> [a] -> [b]
     */
-    ap = lift2 identity;
+    ap = lift2 id;
     /* lift2 :: (a -> b -> c) -> [a] -> [b] -> [c]
     */
     lift2 = f: xs: ys: monad.bind xs (x: monad.bind ys (y: singleton (f x y)));

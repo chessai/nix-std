@@ -1,6 +1,6 @@
 with rec {
   function = import ./function.nix;
-  inherit (function) identity;
+  inherit (function) id;
   list = import ./list.nix;
 };
 
@@ -50,7 +50,7 @@ rec {
   traverse = ap: f:
     (flip match) {
       empty = ap.pure empty;
-      assign = k: v: r: ap.lift2 identity (ap.map (assign k) (f v)) (traverse ap f r);
+      assign = k: v: r: ap.lift2 id (ap.map (assign k) (f v)) (traverse ap f r);
     };
 
   /* toList :: set -> [(key, value)]
