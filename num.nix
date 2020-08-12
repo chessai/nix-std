@@ -63,7 +63,6 @@ rec {
              else (pow' base (exponent - 1) (value * base));
     in pow' base0 exponent0 base0;
 
-  /* TODO: make this 32-bit :( */
   pi = 3.141592653589793238;
 
   toFloat = x: x + 0.0;
