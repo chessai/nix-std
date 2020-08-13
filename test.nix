@@ -138,11 +138,41 @@ let
             };
         in assertEqual "bar" (go ls);
 
+      empty = string.unlines [
+        (assertEqual true (list.empty []))
+        (assertEqual false (list.empty [null]))
+      ];
+
       head = assertEqual 10 (list.head [10 20 30]);
 
       tail = assertEqual [20 30] (list.tail [10 20 30]);
 
-      take = assertEqual [1 2 3 4] (list.take 4 (list.range 1 20));
+      init = assertEqual [10 20] (list.init [10 20 30]);
+
+      last = assertEqual 30 (list.last [10 20 30]);
+
+      take = let xs = list.range 1 20; in string.unlines [
+        (assertEqual [1 2 3 4] (list.take 4 xs))
+        (assertEqual xs (list.take 100 xs))
+      ];
+
+      drop = let xs = list.range 1 20; in string.unlines [
+        (assertEqual (list.range 5 20) (list.drop 4 xs))
+        (assertEqual [] (list.drop 100 xs))
+        (assertEqual xs (list.drop (-1) xs))
+      ];
+
+      takeEnd = let xs = list.range 1 20; in string.unlines [
+        (assertEqual [17 18 19 20] (list.takeEnd 4 xs))
+        (assertEqual xs (list.takeEnd 100 xs))
+        (assertEqual [] (list.takeEnd (-1) xs))
+      ];
+
+      dropEnd = let xs = list.range 1 20; in string.unlines [
+        (assertEqual (list.range 1 16) (list.dropEnd 4 xs))
+        (assertEqual [] (list.dropEnd 100 xs))
+        (assertEqual xs (list.dropEnd (-1) xs))
+      ];
 
       length = assertEqual 20 (list.length (list.range 1 20));
 
@@ -153,6 +183,16 @@ let
       for = assertEqual ["foo-0" "foo-1"] (list.for [0 1] (i: "foo-" + builtins.toString i));
 
       imap = assertEqual ["foo-0" "bar-1"] (list.imap (i: s: s + "-" + builtins.toString i) ["foo" "bar"]);
+
+      modifyAt = string.unlines [
+        (assertEqual [ 1 20 3 ] (list.modifyAt 1 (x: 10 * x) [ 1 2 3 ]))
+        (assertEqual [ 1 2 3 ] (list.modifyAt (-3) (x: 10 * x) [ 1 2 3 ]))
+      ];
+
+      insertAt = string.unlines [
+        (assertEqual [ 1 20 3 ] (list.insertAt 1 20 [ 1 2 3 ]))
+        (assertEqual [ 1 2 3 ] (list.insertAt (-3) 20 [ 1 2 3 ]))
+      ];
 
       ifor = assertEqual ["foo-0" "bar-1"] (list.ifor ["foo" "bar"] (i: s: s + "-" + builtins.toString i));
 
@@ -181,6 +221,8 @@ let
         (assertEqual [1 2 3 4 5] (list.snoc [1 2 3 4] 5))
       ];
 
+      snoc = assertEqual [1 2 3 4 5] (list.snoc [1 2 3 4] 5);
+
       foldr = assertEqual 55 (list.foldr builtins.add 0 (list.range 1 10));
 
       foldl' = assertEqual 3628800 (list.foldl' builtins.mul 1 (list.range 1 10));
@@ -188,6 +230,11 @@ let
       foldMap = string.unlines [
         (assertEqual 1 (list.foldMap monoid.first id (list.range 1 10)))
         (assertEqual 321 ((list.foldMap monoid.endo id [ (x: builtins.mul x 3) (x: builtins.add x 7) (x: num.pow x 2) ]) 10))
+      ];
+
+      fold = string.unlines [
+        (assertEqual 1 (list.fold monoid.first (list.range 1 10)))
+        (assertEqual 321 ((list.fold monoid.endo [ (x: builtins.mul x 3) (x: builtins.add x 7) (x: num.pow x 2) ]) 10))
       ];
 
       sum = assertEqual 55 (list.sum (list.range 1 10));
@@ -224,6 +271,12 @@ let
 
       replicate = assertEqual [1 1 1 1 1 1] (list.replicate 6 1);
 
+      slice = string.unlines [
+        (assertEqual [3 4] (list.slice 2 2 [ 1 2 3 4 5 ]))
+        (assertEqual [3 4 5] (list.slice 2 30 [ 1 2 3 4 5 ]))
+        (assertEqual [2 3 4 5] (list.slice 1 (-1) [ 1 2 3 4 5 ]))
+      ];
+
       range = assertEqual [1 2 3 4 5] (list.range 1 5);
 
       partition = string.unlines [
@@ -244,9 +297,48 @@ let
       ];
 
       reverse = string.unlines [
-        (assertEqual (list.reverse [1 2 3]) [3 2 1])
-        (assertEqual (list.reverse []) [])
+        (assertEqual [3 2 1] (list.reverse [1 2 3]))
+        (assertEqual [] (list.reverse []))
       ];
+
+      unfold = assertEqual [10 9 8 7 6 5 4 3 2 1]
+        (list.unfold (n: if n == 0 then null else { _0 = n; _1 = n - 1; }) 10);
+
+      findIndex = string.unlines [
+        (assertEqual 1 (list.findIndex num.even [ 1 2 3 4 ]))
+        (assertEqual null (list.findIndex num.even [ 1 3 5 ]))
+      ];
+
+      findLastIndex = string.unlines [
+        (assertEqual 3 (list.findLastIndex num.even [ 1 2 3 4 ]))
+        (assertEqual null (list.findLastIndex num.even [ 1 3 5 ]))
+      ];
+
+      find = string.unlines [
+        (assertEqual 2 (list.find num.even [ 1 2 3 4 ]))
+        (assertEqual null (list.find num.even [ 1 3 5 ]))
+      ];
+
+      findLast = string.unlines [
+        (assertEqual 4 (list.findLast num.even [ 1 2 3 4 ]))
+        (assertEqual null (list.findLast num.even [ 1 3 5 ]))
+      ];
+
+      splitAt = assertEqual { _0 = [ 1 ]; _1 = [ 2 3 ]; } (list.splitAt 1 [ 1 2 3 ]);
+
+      takeWhile = assertEqual [ 2 4 6 ] (list.takeWhile num.even [ 2 4 6 9 10 11 12 14 ]);
+
+      dropWhile = assertEqual [ 9 10 11 12 14 ] (list.dropWhile num.even [ 2 4 6 9 10 11 12 14 ]);
+
+      takeWhileEnd = assertEqual [ 12 14 ] (list.takeWhileEnd num.even [ 2 4 6 9 10 11 12 14 ]);
+
+      dropWhileEnd = assertEqual [ 2 4 6 9 10 11 ] (list.dropWhileEnd num.even [ 2 4 6 9 10 11 12 14 ]);
+
+      span = assertEqual { _0 = [ 2 4 6 ]; _1 = [ 9 10 11 12 14 ]; }
+        (list.span num.even [ 2 4 6 9 10 11 12 14 ]);
+
+      break = assertEqual { _0 = [ 2 4 6 ]; _1 = [ 9 10 11 12 14 ]; }
+        (list.break num.odd [ 2 4 6 9 10 11 12 14 ]);
     };
 
     string = section "std.string" {
@@ -257,8 +349,9 @@ let
         (assertEqual (string.substring 2 3 "foobar") "oba")
         (assertEqual (string.substring 4 7 "foobar") "ar")
         (assertEqual (string.substring 10 5 "foobar") "")
+        (assertEqual (string.substring 1 (-20) "foobar") "oobar")
       ];
-      index = assertEqual (string.index 3 "foobar") "b";
+      index = assertEqual (string.index "foobar" 3) "b";
       length = assertEqual (string.length "foo") 3;
       empty = string.unlines [
         (assertEqual (string.empty "a") false)
@@ -276,7 +369,15 @@ let
       imap = assertEqual (string.imap (i: x: builtins.toJSON i + x) "foo") "0f1o2o";
       filter = assertEqual (string.filter (x: x != " ") "foo bar baz") "foobarbaz";
       findIndex = assertEqual (string.findIndex (x: x == " ") "foo bar baz") 3;
-      find = assertEqual (string.find (x: x == " ") "foo bar baz") " ";
+      findLastIndex = assertEqual (string.findLastIndex (x: x == " ") "foo bar baz") 7;
+      find = string.unlines [
+        (assertEqual (string.find (x: x == " ") "foo bar baz") " ")
+        (assertEqual (string.find (x: x == "q") "foo bar baz") null)
+      ];
+      findLast = string.unlines [
+        (assertEqual (string.find (x: x == " ") "foo bar baz") " ")
+        (assertEqual (string.find (x: x == "q") "foo bar baz") null)
+      ];
       escape = assertEqual (string.escape ["$"] "foo$bar") "foo\\$bar";
       escapeShellArg = assertEqual (string.escapeShellArg "foo 'bar' baz") "'foo '\\''bar'\\'' baz'";
       escapeNixString = assertEqual (string.escapeNixString "foo$bar") ''"foo\$bar"'';
@@ -315,18 +416,22 @@ let
       take = string.unlines [
         (assertEqual (string.take 3 "foobar") "foo")
         (assertEqual (string.take 7 "foobar") "foobar")
+        (assertEqual (string.take (-1) "foobar") "")
       ];
       drop = string.unlines [
         (assertEqual (string.drop 3 "foobar") "bar")
         (assertEqual (string.drop 7 "foobar") "")
+        (assertEqual (string.drop (-1) "foobar") "foobar")
       ];
       takeEnd = string.unlines [
         (assertEqual (string.takeEnd 3 "foobar") "bar")
         (assertEqual (string.takeEnd 7 "foobar") "foobar")
+        (assertEqual (string.takeEnd (-1) "foobar") "")
       ];
       dropEnd = string.unlines [
         (assertEqual (string.dropEnd 3 "foobar") "foo")
         (assertEqual (string.dropEnd 7 "foobar") "")
+        (assertEqual (string.dropEnd (-1) "foobar") "foobar")
       ];
       takeWhile = assertEqual (string.takeWhile (x: x != " ") "foo bar baz") "foo";
       dropWhile = assertEqual (string.dropWhile (x: x != " ") "foo bar baz") " bar baz";
