@@ -22,8 +22,9 @@ rec {
      Take a substring of a string at an offset with a given length. If the
      offset is past the end of the string, the result will be the empty string.
      If there are less than the requested number of characters until the end of
-     the string, returns as many as possible. If the length is negative, returns
-     the string unchanged.
+     the string, returns as many as possible. Otherwise, if the length is
+     negative, simply returns the rest of the string after the starting
+     position.
 
      Fails if the starting position is negative.
 
@@ -33,6 +34,8 @@ rec {
      "ar"
      > string.substring 10 5 "foobar"
      ""
+     > string.substring 2 (-1) "foobar"
+     "obar"
   */
   substring = builtins.substring;
 

@@ -257,6 +257,7 @@ let
         (assertEqual (string.substring 2 3 "foobar") "oba")
         (assertEqual (string.substring 4 7 "foobar") "ar")
         (assertEqual (string.substring 10 5 "foobar") "")
+        (assertEqual (string.substring 1 (-20) "foobar") "oobar")
       ];
       index = assertEqual (string.index 3 "foobar") "b";
       length = assertEqual (string.length "foo") 3;
