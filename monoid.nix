@@ -2,27 +2,22 @@ with rec {
   function = import ./function.nix;
   inherit (function) compose id flip;
 
-  list = import ./list.nix;
-
   semigroup = import ./semigroup.nix;
+
+  imports = {
+    list = import ./list.nix;
+    string = import ./string.nix;
+  };
 };
 
-{
-  first = semigroup.first // {
-    empty = null;
-  };
+rec {
+  first = maybe semigroup.first;
 
-  last = semigroup.last // {
-    empty = null;
-  };
+  last = maybe semigroup.last;
 
-  min = semigroup.min // {
-    empty = null;
-  };
+  min = maybe semigroup.min;
 
-  max = semigroup.max // {
-    empty = max;
-  };
+  max = maybe semigroup.max;
 
   dual = monoid: semigroup.dual monoid // {
     empty = monoid.empty;
@@ -40,5 +35,13 @@ with rec {
     empty = false;
   };
 
-  list = list.monoid;
+  list = imports.list.monoid;
+
+  string = imports.string.monoid;
+
+  /* 'maybe' recovers a monoid from a semigroup by adding 'null' as the empty element.
+  */
+  maybe = sg: semigroup.maybe sg // {
+    empty = null;
+  };
 }
