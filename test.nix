@@ -723,10 +723,8 @@ stdenv.mkDerivation {
   pname = "nix-std-test";
   version = import ./version.nix;
 
-  src = ./.;
-
   doCheck = true;
-  phases = [ "unpackPhase" "checkPhase" "installPhase" ];
+  phases = [ "checkPhase" "installPhase" ];
 
   checkPhase = string.unlines (builtins.attrValues sections);
 
