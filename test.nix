@@ -278,8 +278,14 @@ let
       filter = assertEqual (string.filter (x: x != " ") "foo bar baz") "foobarbaz";
       findIndex = assertEqual (string.findIndex (x: x == " ") "foo bar baz") 3;
       findLastIndex = assertEqual (string.findLastIndex (x: x == " ") "foo bar baz") 7;
-      find = assertEqual (string.find (x: x == " ") "foo bar baz") " ";
-      findLast = assertEqual (string.find (x: x == " ") "foo bar baz") " ";
+      find = string.unlines [
+        (assertEqual (string.find (x: x == " ") "foo bar baz") " ")
+        (assertEqual (string.find (x: x == "q") "foo bar baz") null)
+      ];
+      findLast = string.unlines [
+        (assertEqual (string.find (x: x == " ") "foo bar baz") " ")
+        (assertEqual (string.find (x: x == "q") "foo bar baz") null)
+      ];
       escape = assertEqual (string.escape ["$"] "foo$bar") "foo\\$bar";
       escapeShellArg = assertEqual (string.escapeShellArg "foo 'bar' baz") "'foo '\\''bar'\\'' baz'";
       escapeNixString = assertEqual (string.escapeNixString "foo$bar") ''"foo\$bar"'';

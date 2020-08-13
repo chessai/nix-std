@@ -170,7 +170,7 @@ rec {
   */
   filter = pred: str: concat (list.filter pred (toChars str));
 
-  /* findIndex :: (string -> bool) -> string -> maybe int
+  /* findIndex :: (string -> bool) -> string -> Maybe int
 
      Find the index of the first character in a string matching the predicate,
      or return null if no such character is present.
@@ -186,7 +186,7 @@ rec {
         else go (i + 1);
     in go 0;
 
-  /* findLastIndex :: (string -> bool) -> string -> maybe int
+  /* findLastIndex :: (string -> bool) -> string -> Maybe int
 
      Find the index of the last character in a string matching the predicate, or
      return null if no such character is present.
@@ -202,19 +202,23 @@ rec {
         else go (i - 1);
     in go (len - 1);
 
-  /* find :: (string -> bool) -> string -> maybe string
+  /* find :: (string -> bool) -> string -> Maybe string
 
      Find the first character in a string matching the predicate, or return null
      if no such character is present.
   */
-  find = pred: str: index str (findIndex pred str);
+  find = pred: str:
+    let i = findIndex pred str;
+    in if i == null then null else index str i;
 
-  /* findLast :: (string -> bool) -> string -> maybe string
+  /* findLast :: (string -> bool) -> string -> Maybe string
 
      Find the last character in a string matching the predicate, or return null
      if no such character is present.
   */
-  findLast = pred: str: index str (findLastIndex pred str);
+  findLast = pred: str:
+    let i = findLastIndex pred str;
+    in if i == null then null else index str i;
 
   /* escape :: [string] -> string -> string
 
