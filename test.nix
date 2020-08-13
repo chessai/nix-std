@@ -337,8 +337,8 @@ let
         (assertEqual 321 ((list.foldMap std.monoid.endo id [ (x: builtins.mul x 3) (x: builtins.add x 7) (x: num.pow x 2) ]) 10))
       ];
       fold = string.unlines [
-        (assertEqual 1 (list.fold monoid.first (list.range 1 10)))
-        (assertEqual 321 ((list.fold monoid.endo [ (x: builtins.mul x 3) (x: builtins.add x 7) (x: num.pow x 2) ]) 10))
+        (assertEqual 1 (list.fold std.monoid.first (list.range 1 10)))
+        (assertEqual 321 ((list.fold std.monoid.endo [ (x: builtins.mul x 3) (x: builtins.add x 7) (x: num.pow x 2) ]) 10))
       ];
       sum = assertEqual 55 (list.sum (list.range 1 10));
       product = assertEqual 3628800 (list.product (list.range 1 10));
