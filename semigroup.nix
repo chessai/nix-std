@@ -2,7 +2,10 @@ with rec {
   function = import ./function.nix;
   inherit (function) compose id flip;
 
-  list = import ./list.nix;
+  imports = {
+    list = import ./list.nix;
+    string = import ./string.nix;
+  };
 };
 
 {
@@ -44,5 +47,20 @@ with rec {
     append = x: y: x || y;
   };
 
-  list = list.semigroup;
+  list = imports.list.semigroup;
+
+  string = imports.string.semigroup;
+
+  /* 'maybe' recovers a monoid from a semigroup by adding 'null' as the empty
+     element. The semigroup's append will simply discard nulls in favor of other
+     elements.
+  */
+  maybe = semigroup: {
+    append = x: y:
+      if x == null
+        then y
+      else if y == null
+        then x
+      else semigroup.append x y;
+  };
 }
