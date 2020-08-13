@@ -40,14 +40,14 @@ rec {
   substring = builtins.substring;
 
   /* @partial
-     index :: int -> string -> string
+     index :: string -> int -> string
 
      Returns the nth character of a string. Fails if the index is out of bounds.
 
      > string.index 3 "foobar"
      "b"
   */
-  index = n: str:
+  index = str: n:
     if n >= length str
       then throw "std.string.index: index out of bounds"
       else substring n 1 str;
@@ -149,7 +149,7 @@ rec {
      > string.toChars "foo"
      [ "f" "o" "o" ]
   */
-  toChars = str: list.generate (i: index i str) (length str);
+  toChars = str: list.generate (index str) (length str);
 
   /* map :: (string -> string) -> string -> string
 
@@ -181,7 +181,7 @@ rec {
       go = i:
         if i >= len
           then null
-        else if pred (index i str)
+        else if pred (index str i)
           then i
         else go (i + 1);
     in go 0;
@@ -197,7 +197,7 @@ rec {
       go = i:
         if i < 0
           then null
-        else if pred (index i str)
+        else if pred (index str i)
           then i
         else go (i - 1);
     in go (len - 1);
@@ -207,14 +207,14 @@ rec {
      Find the first character in a string matching the predicate, or return null
      if no such character is present.
   */
-  find = pred: str: index (findIndex pred str) str;
+  find = pred: str: index str (findIndex pred str);
 
   /* findLast :: (string -> bool) -> string -> maybe string
 
      Find the last character in a string matching the predicate, or return null
      if no such character is present.
   */
-  findLast = pred: str: index (findLastIndex pred str) str;
+  findLast = pred: str: index str (findLastIndex pred str);
 
   /* escape :: [string] -> string -> string
 
@@ -331,7 +331,7 @@ rec {
   head = str:
     let len = length str;
     in if len > 0
-      then index 0 str
+      then index str 0
       else throw "std.string.head: empty string";
 
   /* @partial

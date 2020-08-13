@@ -259,7 +259,7 @@ let
         (assertEqual (string.substring 10 5 "foobar") "")
         (assertEqual (string.substring 1 (-20) "foobar") "oobar")
       ];
-      index = assertEqual (string.index 3 "foobar") "b";
+      index = assertEqual (string.index "foobar" 3) "b";
       length = assertEqual (string.length "foo") 3;
       empty = string.unlines [
         (assertEqual (string.empty "a") false)
