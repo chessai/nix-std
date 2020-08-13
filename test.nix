@@ -316,18 +316,22 @@ let
       take = string.unlines [
         (assertEqual (string.take 3 "foobar") "foo")
         (assertEqual (string.take 7 "foobar") "foobar")
+        (assertEqual (string.take (-1) "foobar") "")
       ];
       drop = string.unlines [
         (assertEqual (string.drop 3 "foobar") "bar")
         (assertEqual (string.drop 7 "foobar") "")
+        (assertEqual (string.drop (-1) "foobar") "foobar")
       ];
       takeEnd = string.unlines [
         (assertEqual (string.takeEnd 3 "foobar") "bar")
         (assertEqual (string.takeEnd 7 "foobar") "foobar")
+        (assertEqual (string.takeEnd (-1) "foobar") "")
       ];
       dropEnd = string.unlines [
         (assertEqual (string.dropEnd 3 "foobar") "foo")
         (assertEqual (string.dropEnd 7 "foobar") "")
+        (assertEqual (string.dropEnd (-1) "foobar") "foobar")
       ];
       takeWhile = assertEqual (string.takeWhile (x: x != " ") "foo bar baz") "foo";
       dropWhile = assertEqual (string.dropWhile (x: x != " ") "foo bar baz") " bar baz";

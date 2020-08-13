@@ -355,16 +355,14 @@ rec {
      Return the first n characters of a string. If less than n characters are
      present, take as many as possible.
   */
-  take = substring 0;
+  take = n: substring 0 (num.max 0 n);
 
   /* drop :: int -> string -> string
 
      Remove the first n characters of a string. If less than n characters are
      present, return the empty string.
   */
-  drop = n: str:
-    let n' = num.max n 0;
-    in substring n' (length str - n') str;
+  drop = n: substring (num.max 0 n) (-1);
 
   /* takeEnd :: int -> string -> string
 
