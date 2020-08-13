@@ -3,8 +3,17 @@ with {
   string = import ./string.nix;
 };
 
-rec {
-  inherit (builtins) add mul;
+let
+  jsonIntRE = ''-?(0|[1-9][[:digit:]]*)'';
+  jsonNumberRE =
+    let exponent = ''[eE]-?[[:digit:]]+'';
+    in ''(${jsonIntRE}(\.[[:digit:]]+)?)(${exponent})?'';
+in rec {
+  inherit (builtins) add mul bitAnd bitOr bitXor;
+
+  /* bitNot :: int -> int
+  */
+  bitNot = bitXor (-1);
 
   /* negate :: Num a => a -> a
   */
@@ -38,59 +47,94 @@ rec {
     then y
     else x;
 
-  mod = base: int: base - (int * (builtins.div base int));
+  /* compare :: number -> number -> int
 
-  /* even :: integer -> bool
+     Compares two numbers and returns -1 if the first is less than the second, 0
+     if they are equal, or 1 if the first is greater than the second.
   */
-  even = x: mod x 2 == 0;
+  compare = x: y:
+    if x < y
+      then -1
+    else if x > y
+      then 1
+    else 0;
 
-  /* odd :: integer -> bool
-  */
-  odd = x: mod x 2 == 1;
+  /* quot :: integer -> integer -> integer
 
-  /* divMod :: Integral a => a -> a -> (a, a)
+     Integer division, truncated towards 0. This is an alias for 'builtins.div'.
   */
-  divMod = n: d:
-    let qr = quotRem n d;
-        q = qr._0;
-        r = qr._1;
-    in if signum r == negate (signum d)
-       then { _0 = q - 1; _1 = r + d; }
-       else qr;
+  quot = builtins.div;
+
+  /* rem :: integer -> integer -> integer
+
+     Integer remainder. For integers m and n, this has the property that
+     "n * (quot m n) + rem m n = m".
+  */
+  rem = base: int: base - (int * (quot base int));
+
+  /* div :: integer -> integer -> integer
+
+     Integer division, truncated towards negative infinity. Despite the name,
+     note that this is not the same as 'builtins.div', which truncates towards 0.
+  */
+  div = base: int:
+    let q = quot base int;
+    in if (base < 0) != (int < 0)
+      then q - 1
+      else q;
+
+  /* mod :: integer -> integer -> integer
+
+     Integer modulus. For integers m and n, this has the property that
+     "n * (div m n) + mod m n = m".
+  */
+  mod = base: int: base - (int * (div base int));
 
   /* quotRem :: Integral a => a -> a -> (a, a)
   */
-  quotRem = n: d: throw "implement quotRem";
+  quotRem = n: d: { _0 = quot n d; _1 = rem n d; };
 
+  /* divMod :: Integral a => a -> a -> (a, a)
+  */
+  divMod = n: d: { _0 = div n d; _1 = mod n d; };
+
+  /* even :: integer -> bool
+  */
+  even = x: rem x 2 == 0;
+
+  /* odd :: integer -> bool
+  */
+  odd = x: rem x 2 != 0;
+
+  /* fac :: integer -> integer
+
+     Integer factorial.
+  */
   fac = n:
     if n < 0
     then throw "std.num.fac: argument is negative"
     else (if n == 0 then 1 else n * fac (n - 1));
 
+  /* pow :: number -> integer -> number
+
+     Integer exponentiation. Note that this only handles positive integer exponents.
+  */
   pow = base0: exponent0:
     let pow' = base: exponent: value:
         if exponent == 0
-        then 1
+          then 1
         else if exponent <= 1
-             then value
-             else (pow' base (exponent - 1) (value * base));
-    in pow' base0 exponent0 base0;
+          then value
+        else pow' base (exponent - 1) (value * base);
+    in if base0 == 0 || base0 == 1 then 1 else pow' base0 exponent0 base0;
 
   pi = 3.141592653589793238;
 
-  toFloat = x: x + 0.0;
+  /* toFloat :: int -> float
 
-  /* may god have mercy on my soul. */
-  floor = f:
-    let chars = string.toChars (builtins.toJSON f);
-        searcher = n: c:
-          if n.found
-          then n
-          else if c == "."
-               then { index = n.index; found = true; }
-               else { index = n.index + 1; found = false; };
-        radix = (list.foldl' searcher { index = 0; found = false; } chars).index;
-    in builtins.fromJSON (string.concat (list.take radix chars));
+     Converts an integer to a floating-point number.
+  */
+  toFloat = x: x + 0.0;
 
   sin = t:
     let x = toFloat t;
@@ -153,4 +197,118 @@ rec {
 
     # TODO: polar, magnitude, phase
   };
+
+  /* truncate :: float -> int
+
+     Truncate a float to an int, rounding towards 0.
+  */
+  # may god have mercy on my soul.
+  truncate = f:
+    let chars = builtins.toJSON f;
+    in builtins.fromJSON (string.takeWhile (c: c != ".") chars);
+
+  /* floor :: float -> int
+
+     Floor a floating point number, rounding towards negative infinity.
+  */
+  floor = builtins.floor or (f: truncate (if f < 0 then f - 1 else f));
+
+  /* ceil :: float -> int
+
+     Ceiling a floating point number, rounding towards positive infinity.
+  */
+  ceil = builtins.ceil or (f: truncate (if f > 0 then f + 1 else f));
+
+  /* round :: float -> int
+
+     Round a floating-point number to the nearest integer, biased away from 0.
+  */
+  round = f: signum f * floor (abs f + 0.5);
+
+  /* tryParseInt :: string -> maybe int
+
+     Attempt to parse a string into an int. If it fails and the string is still
+     parseable a valid JSON value, return null.
+  */
+  tryParseInt = x:
+    let
+      # fromJSON aborts on invalid JSON values; check that it matches first
+      matches = builtins.match jsonIntRE x != null;
+      res = builtins.fromJSON x;
+    in if matches && builtins.isInt res
+      then res
+      else null;
+
+  /* @partial
+     parseInt :: string -> int
+
+     Attempt to parse a string into an int. If parsing fails, throw an
+     exception.
+  */
+  parseInt = x:
+    let res = tryParseInt x;
+    in if res == null
+      then throw "std.num.parseInt: failed to parse"
+      else res;
+
+  /* tryParseFloat :: string -> maybe float
+
+     Attempt to parse a string into a float. If it fails and the string is still
+     parseable a valid JSON value, return null.
+  */
+  tryParseFloat = x:
+    let
+      # fromJSON aborts on invalid JSON values; check that it matches first
+      matches = builtins.match jsonNumberRE x != null;
+      res = builtins.fromJSON x;
+    in if matches && (builtins.isFloat res || builtins.isInt res)
+      then res
+      else null;
+
+  /* @partial
+     parseFloat :: string -> float
+
+     Attempt to parse a string into a float. If parsing fails, throw an
+     exception.
+  */
+  parseFloat = x:
+    let res = tryParseFloat x;
+    in if res == null
+      then throw "std.num.parseFloat: failed to parse"
+      else res;
+
+  /* toBaseDigits :: int -> int -> [int]
+
+     Convert an int to a list of digits in the given base. The most significant
+     digit is the first element of the list.
+
+     Note: this only works on positive numbers.
+  */
+  toBaseDigits = radix: x:
+    if x < 0
+      then throw "std.num.toBaseDigits: argument is negative"
+    else if radix == 1
+      then list.replicate x 1
+    else
+      let
+        go = xs: n:
+          if n < radix
+          then list.cons n xs
+          else
+            let qr = quotRem n radix;
+            in go (list.cons (qr._1) xs) qr._0;
+      in go [] x;
+
+  /* fromBaseDigits :: int -> [int] -> int
+
+     Convert a list of digits in the given base into an int. The most
+     significant digit is the first element of the list.
+  */
+  fromBaseDigits = radix: list.foldl' (acc: n: acc * radix + n) 0;
+
+  /* toHexString :: int -> string
+  */
+  toHexString = x:
+    let toHexDigit = string.index "0123456789ABCDEF";
+    in string.concatMap toHexDigit (toBaseDigits 16 x);
 }
