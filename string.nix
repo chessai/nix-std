@@ -186,12 +186,35 @@ rec {
         else go (i + 1);
     in go 0;
 
-  /* findIndex :: (string -> bool) -> string -> maybe string
+  /* findLastIndex :: (string -> bool) -> string -> maybe int
+
+     Find the index of the last character in a string matching the predicate, or
+     return null if no such character is present.
+  */
+  findLastIndex = pred: str:
+    let
+      len = length str;
+      go = i:
+        if i < 0
+          then null
+        else if pred (index i str)
+          then i
+        else go (i - 1);
+    in go (len - 1);
+
+  /* find :: (string -> bool) -> string -> maybe string
 
      Find the first character in a string matching the predicate, or return null
      if no such character is present.
   */
   find = pred: str: index (findIndex pred str) str;
+
+  /* findLast :: (string -> bool) -> string -> maybe string
+
+     Find the last character in a string matching the predicate, or return null
+     if no such character is present.
+  */
+  findLast = pred: str: index (findLastIndex pred str) str;
 
   /* escape :: [string] -> string -> string
 
@@ -388,56 +411,40 @@ rec {
      Return the longest prefix of the string that satisfies the predicate.
   */
   takeWhile = pred: str:
-    let
-      len = length str;
-      go = i:
-        if i >= len || !(pred (substring i 1 str))
-          then i
-          else go (i + 1);
-      n = go 0;
-    in take n str;
+    let n = findIndex (x: !pred x) str;
+    in if n == null
+      then str
+      else take n str;
 
   /* dropWhile :: (string -> bool) -> string -> string
 
      Return the rest of the string after the prefix returned by 'takeWhile'.
   */
   dropWhile = pred: str:
-    let
-      len = length str;
-      go = i:
-        if i >= len || !(pred (substring i 1 str))
-          then i
-          else go (i + 1);
-      n = go 0;
-    in drop n str;
+    let n = findIndex (x: !pred x) str;
+    in if n == null
+      then ""
+      else drop n str;
 
   /* takeWhileEnd :: (string -> bool) -> string -> string
 
      Return the longest suffix of the string that satisfies the predicate.
   */
   takeWhileEnd = pred: str:
-    let
-      len = length str;
-      go = i:
-        if i < 0 || !(pred (index i str))
-          then i
-          else go (i - 1);
-      n = go (len - 1) + 1;
-    in drop n str;
+    let n = findLastIndex (x: !pred x) str;
+    in if n == null
+      then ""
+      else drop (n + 1) str;
 
   /* dropWhileEnd :: (string -> bool) -> string -> string
 
      Return the rest of the string after the suffix returned by 'takeWhileEnd'.
   */
   dropWhileEnd = pred: str:
-    let
-      len = length str;
-      go = i:
-        if i < 0 || !(pred (index i str))
-          then i
-          else go (i - 1);
-      n = go (len - 1) + 1;
-    in take n str;
+    let n = findLastIndex (x: !pred x) str;
+    in if n == null
+      then ""
+      else take (n + 1) str;
 
   /* splitAt :: int -> string -> (string, string)
 
@@ -451,14 +458,10 @@ rec {
      of this prefix and the rest of the string.
   */
   span = pred: str:
-    let
-      len = length str;
-      go = i:
-        if i >= len || !(pred (index i str))
-          then i
-          else go (i + 1);
-      n = go 0;
-    in splitAt n str;
+    let n = findIndex (x: !pred x) str;
+    in if n == null
+      then { _0 = str; _1 = ""; }
+      else splitAt n str;
 
   /* break :: (string -> bool) -> string -> (string, string)
 
@@ -466,14 +469,10 @@ rec {
      return a tuple of this prefix and the rest of the string.
   */
   break = pred: str:
-    let
-      len = length str;
-      go = i:
-        if i >= len || pred (index i str)
-          then i
-          else go (i + 1);
-      n = go 0;
-    in splitAt n str;
+    let n = findIndex pred str;
+    in if n == null
+      then { _0 = str; _1 = ""; }
+      else splitAt n str;
 
   /* reverse :: string -> string
 
@@ -537,8 +536,8 @@ rec {
   */
   words = str:
     let stripped = strip str;
-    in if empty stripped 
-      then [] 
+    in if empty stripped
+      then []
       else regex.splitOn ''[[:space:]]+'' stripped;
 
   /* unwords :: [string] -> string
