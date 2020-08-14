@@ -13,8 +13,14 @@ rec {
   };
 
   monoid = semigroup // {
-    empty = "";
+    inherit empty;
   };
+
+  /* empty :: string
+
+     The empty string.
+  */
+  empty = "";
 
   /* @partial
      substring :: int -> int -> string -> string
@@ -63,16 +69,16 @@ rec {
   */
   length = builtins.stringLength;
 
-  /* empty :: string -> bool
+  /* isEmpty :: string -> bool
 
      Check if a string is the empty string.
 
-     > string.empty "foo"
+     > string.isEmpty "foo"
      false
-     > string.empty ""
+     > string.isEmpty ""
      true
   */
-  empty = str: str == "";
+  isEmpty = str: str == "";
 
   /* replace :: [string] -> [string] -> string -> string
 
@@ -513,7 +519,7 @@ rec {
         if len > 0 && substring (len - 1) 1 str == "\n"
           then substring 0 (len - 1) str
           else str;
-    in if empty str # "" is a special case; "\n"/"" don't have the same result
+    in if isEmpty str # "" is a special case; "\n"/"" don't have the same result
       then []
       else regex.splitOn "\n" str';
 
@@ -540,7 +546,7 @@ rec {
   */
   words = str:
     let stripped = strip str;
-    in if empty stripped
+    in if isEmpty stripped
       then []
       else regex.splitOn ''[[:space:]]+'' stripped;
 

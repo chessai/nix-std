@@ -17,7 +17,7 @@ let
 
   assertEqual = x: y:
     if x == y
-    then ""
+    then string.empty
     else ''
       ERR="
         assertEqual failed: x != y, where
@@ -452,14 +452,14 @@ let
       substring = string.unlines [
         (assertEqual (string.substring 2 3 "foobar") "oba")
         (assertEqual (string.substring 4 7 "foobar") "ar")
-        (assertEqual (string.substring 10 5 "foobar") "")
+        (assertEqual (string.substring 10 5 "foobar") string.empty)
         (assertEqual (string.substring 1 (-20) "foobar") "oobar")
       ];
       index = assertEqual (string.index "foobar" 3) "b";
       length = assertEqual (string.length "foo") 3;
       empty = string.unlines [
-        (assertEqual (string.empty "a") false)
-        (assertEqual (string.empty "") true)
+        (assertEqual (string.isEmpty "a") false)
+        (assertEqual (string.isEmpty string.empty) true)
       ];
       replace = assertEqual (string.replace ["o" "a"] ["u " "e "] "foobar") "fu u be r";
       concat = assertEqual (string.concat ["foo" "bar"]) "foobar";
@@ -488,12 +488,12 @@ let
       hasPrefix = string.unlines [
         (assertEqual (string.hasPrefix "foo" "foobar") true)
         (assertEqual (string.hasPrefix "foo" "barfoo") false)
-        (assertEqual (string.hasPrefix "foo" "") false)
+        (assertEqual (string.hasPrefix "foo" string.empty) false)
       ];
       hasSuffix = string.unlines [
         (assertEqual (string.hasSuffix "foo" "barfoo") true)
         (assertEqual (string.hasSuffix "foo" "foobar") false)
-        (assertEqual (string.hasSuffix "foo" "") false)
+        (assertEqual (string.hasSuffix "foo" string.empty) false)
       ];
       hasInfix = string.unlines [
         (assertEqual (string.hasInfix "bar" "foobarbaz") true)
@@ -511,7 +511,7 @@ let
       count = assertEqual (string.count "." ".a.b.c.d.") 5;
       optional = string.unlines [
         (assertEqual (string.optional true "foo") "foo")
-        (assertEqual (string.optional false "foo") "")
+        (assertEqual (string.optional false "foo") string.empty)
       ];
       head = assertEqual (string.head "bar") "b";
       tail = assertEqual (string.tail "bar") "ar";
@@ -520,21 +520,21 @@ let
       take = string.unlines [
         (assertEqual (string.take 3 "foobar") "foo")
         (assertEqual (string.take 7 "foobar") "foobar")
-        (assertEqual (string.take (-1) "foobar") "")
+        (assertEqual (string.take (-1) "foobar") string.empty)
       ];
       drop = string.unlines [
         (assertEqual (string.drop 3 "foobar") "bar")
-        (assertEqual (string.drop 7 "foobar") "")
+        (assertEqual (string.drop 7 "foobar") string.empty)
         (assertEqual (string.drop (-1) "foobar") "foobar")
       ];
       takeEnd = string.unlines [
         (assertEqual (string.takeEnd 3 "foobar") "bar")
         (assertEqual (string.takeEnd 7 "foobar") "foobar")
-        (assertEqual (string.takeEnd (-1) "foobar") "")
+        (assertEqual (string.takeEnd (-1) "foobar") string.empty)
       ];
       dropEnd = string.unlines [
         (assertEqual (string.dropEnd 3 "foobar") "foo")
-        (assertEqual (string.dropEnd 7 "foobar") "")
+        (assertEqual (string.dropEnd 7 "foobar") string.empty)
         (assertEqual (string.dropEnd (-1) "foobar") "foobar")
       ];
       takeWhile = assertEqual (string.takeWhile (x: x != " ") "foo bar baz") "foo";
@@ -546,26 +546,26 @@ let
       break = assertEqual (string.break (x: x == " ") "foo bar baz") { _0 = "foo"; _1 = " bar baz"; };
       reverse = string.unlines [
         (assertEqual (string.reverse "foobar") "raboof")
-        (assertEqual (string.reverse "") "")
+        (assertEqual (string.reverse string.empty) string.empty)
       ];
       replicate = string.unlines [
         (assertEqual (string.replicate 3 "foo") "foofoofoo")
-        (assertEqual (string.replicate 0 "bar") "")
+        (assertEqual (string.replicate 0 "bar") string.empty)
       ];
       lines = string.unlines [
         (assertEqual (string.lines "foo\nbar\n") [ "foo" "bar" ])
         (assertEqual (string.lines "foo\nbar") [ "foo" "bar" ])
-        (assertEqual (string.lines "\n") [ "" ])
-        (assertEqual (string.lines "") [])
+        (assertEqual (string.lines "\n") [ string.empty ])
+        (assertEqual (string.lines string.empty) [])
       ];
       unlines = string.unlines [
         (assertEqual (string.unlines [ "foo" "bar" ]) "foo\nbar\n")
-        (assertEqual (string.unlines []) "")
+        (assertEqual (string.unlines []) string.empty)
       ];
       words = string.unlines [
         (assertEqual (string.words "foo \t bar   ") [ "foo" "bar" ])
         (assertEqual (string.words " ") [])
-        (assertEqual (string.words "") [])
+        (assertEqual (string.words string.empty) [])
       ];
       unwords = assertEqual (string.unwords [ "foo" "bar" ]) "foo bar";
       intercalate = assertEqual (string.intercalate ", " ["1" "2" "3"]) "1, 2, 3";
@@ -573,7 +573,7 @@ let
       toUpper = assertEqual (string.toUpper "FOO bar") "FOO BAR";
       strip = string.unlines [
         (assertEqual (string.strip "   \t\t  foo   \t") "foo")
-        (assertEqual (string.strip "   \t\t   \t") "")
+        (assertEqual (string.strip "   \t\t   \t") string.empty)
       ];
       stripStart = assertEqual (string.stripStart "   \t\t  foo   \t") "foo   \t";
       stripEnd = assertEqual (string.stripEnd "   \t\t  foo   \t") "   \t\t  foo";
@@ -624,7 +624,7 @@ let
 
       split = assertEqual (regex.split "(,)" "1,2,3") ["1" [","] "2" [","] "3"];
 
-      splitOn = assertEqual (regex.splitOn "(,)" "1,2,3") ["1" "2""3"];
+      splitOn = assertEqual (regex.splitOn "(,)" "1,2,3") ["1" "2" "3"];
 
       substituteWith = assertEqual (regex.substituteWith "([[:digit:]])" (g: builtins.toJSON (builtins.fromJSON (builtins.head g) + 1)) "123") "234";
 
