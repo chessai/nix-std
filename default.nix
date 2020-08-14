@@ -34,4 +34,6 @@ rec {
   string = import ./string.nix;
 
   types = import ./types.nix;
+
+  version = import ./version.nix;
 }
