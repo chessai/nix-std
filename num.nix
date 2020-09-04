@@ -9,11 +9,7 @@ let
     let exponent = ''[eE]-?[[:digit:]]+'';
     in ''(${jsonIntRE}(\.[[:digit:]]+)?)(${exponent})?'';
 in rec {
-  inherit (builtins) add mul bitAnd bitOr bitXor;
-
-  /* bitNot :: int -> int
-  */
-  bitNot = bitXor (-1);
+  inherit (builtins) add mul;
 
   /* negate :: Num a => a -> a
   */
@@ -328,4 +324,245 @@ in rec {
     if x == 0 || y == 0
     then 0
     else abs (quot x (gcd x y) * y);
+
+  /* clamp :: num -> num -> num
+
+     Clamp the value of the third argument to be between the first two
+     arguments, so that the result is lower-bounded by the first argument and
+     upper-bounded by the second.
+  */
+  clamp = lo: hi: x: min (max lo x) hi;
+
+  /* maxInt :: int
+
+     The highest representable positive integer.
+  */
+  maxInt = 9223372036854775807; # 2^63 - 1
+
+  /* minInt :: int
+
+     The lowest representable negative integer.
+  */
+  minInt = maxInt + 1; # relies on 2's complement representation
+
+  bits =
+    let
+      # table of (bit n) for 0 <= n <= (sizeof(int) - 1)
+      powtab = [
+        1 2 4 8 16 32 64 128 256 512 1024 2048 4096 8192 16384 32768 65536 131072
+        262144 524288 1048576 2097152 4194304 8388608 16777216 33554432 67108864
+        134217728 268435456 536870912 1073741824 2147483648 4294967296 8589934592
+        17179869184 34359738368 68719476736 137438953472 274877906944 549755813888
+        1099511627776 2199023255552 4398046511104 8796093022208 17592186044416
+        35184372088832 70368744177664 140737488355328 281474976710656
+        562949953421312 1125899906842624 2251799813685248 4503599627370496
+        9007199254740992 18014398509481984 36028797018963968 72057594037927936
+        144115188075855872 288230376151711744 576460752303423488
+        1152921504606846976 2305843009213693952 4611686018427387904
+        (9223372036854775807 + 1)
+      ];
+    in rec {
+      /* bitSize :: int
+
+         The number of bits used to represent an integer in Nix.
+      */
+      bitSize = 64;
+
+      /* bitAnd :: int -> int -> int
+
+         Computes the bitwise AND of the 2's complement binary representations
+         of the given numbers.
+      */
+      bitAnd = builtins.bitAnd;
+
+      /* bitOr :: int -> int -> int
+
+         Computes the bitwise OR of the 2's complement binary representations of
+         the given numbers.
+      */
+      bitOr = builtins.bitOr;
+
+      /* bitXor :: int -> int -> int
+
+         Computes the bitwise XOR (exclusive OR) of the 2's complement binary
+         representations of the given numbers.
+      */
+      bitXor = builtins.bitXor;
+
+      /* bitNot :: int -> int
+
+         Computes the bitwise NOT (complement) of the 2's complement binary
+         representation of the given number.
+      */
+      bitNot = builtins.bitXor (-1); # -1 is all 1's in 2's complement
+
+      /* bit :: int -> bool
+
+         Gives the number whose 2's complement binary representation contains a
+         single bit set at the given index, in which index 0 corresponds to the
+         least-significant bit.
+      */
+      bit = n: shiftL 1 n;
+
+      /* set :: int -> int -> bool
+
+         Sets the bit in the provided number at the provided index in its 2's
+         complement binary representation, in which index 0 corresponds to the
+         least-significant bit.
+      */
+      set = x: n: bitOr x (bit n);
+
+      /* clear :: int -> int -> bool
+
+         Clears the bit in the provided number at the provided index in its 2's
+         complement binary representation, in which index 0 corresponds to the
+         least-significant bit. "Clear" means the bit is unset; an unset bit
+         will remain unset, and a set bit will be unset.
+      */
+      clear = x: n: bitAnd x (bitNot (bit n));
+
+      /* toggle :: int -> int -> bool
+
+         Toggles the bit in the provided number at the provided index in its 2's
+         complement binary representation, in which index 0 corresponds to the
+         least-significant bit. "Toggle" means the bit is inverted; an unset bit
+         will be set, and a set bit will be unset.
+      */
+      toggle = x: n: bitXor x (bit n);
+
+      /* test :: int -> int -> bool
+
+         Tests the given number to see if the bit at the provided index in its
+         2's complement binary representation, in which index 0 corresponds to
+         the least-significant bit, is set.
+      */
+      test = x: n: bitAnd x (bit n) != 0;
+
+      /* shiftL :: int -> int -> int
+
+         Perform a left shift of the bits in the 2's complement binary
+         representation of the given number by the provided number of places.
+
+         If the number of places is larger than the bitsize, the result will
+         always be 0.
+
+         If the number of places is negative, a signed right shift will be
+         performed.
+      */
+      shiftL = x: n:
+        if n == 0
+          then x
+        else if n < 0
+          then shiftR x (-n)
+        else if n >= bitSize
+          then 0
+        else x * list.index powtab n;
+
+      /* shiftLU :: int -> int -> int
+
+         Perform a left shift of the bits in the 2's complement binary
+         representation of the given number by the provided number of places.
+         For positive shift values, this is equivalent to `shiftL`.
+
+         If the number of places is larger than the bitsize, the result will
+         always be 0.
+
+         If the number of places is negative, an unsigned right shift will be
+         performed.
+      */
+      shiftLU = x: n:
+        if n == 0
+          then x
+        else if n < 0
+          then shiftRU x (-n)
+        else if n >= bitSize
+          then 0
+        else x * list.index powtab n;
+
+      /* shiftR :: int -> int -> int
+
+         Perform a signed (arithmetic) right shift of the bits in the 2's
+         complement binary representation of the given number by the provided
+         number of places. It is unsigned in that the new bits filled in on the
+         left will always match the sign bit before shifting, preserving the
+         sign of the number.
+
+         If the number of places is larger than the bitsize, the result will
+         always be 0 if the input was positive, or -1 otherwise.
+      */
+      shiftR = x: n:
+        if n == 0
+          then x
+        else if n < 0
+          then shiftL x (-n)
+        else if n >= bitSize
+          then (if x < 0 then -1 else 0)
+        else if x < 0
+          then ((x + minInt) / (list.index powtab n)) - list.index powtab (63 - n)
+        else x / list.index powtab n;
+
+      /* shiftRU :: int -> int -> int
+
+         Perform an unsigned (logical) right shift of the bits in the 2's
+         complement binary representation of the given number by the provided
+         number of places. It is unsigned in that the new bits filled in on the
+         left will always be 0.
+
+         If the number of places is larger than the bitsize, the result will
+         always be 0.
+      */
+      shiftRU = x: n:
+        if n == 0
+          then x
+        else if n < 0
+          then shiftL x (-n)
+        else if n >= bitSize
+          then 0
+        else if x < 0
+          then ((x + minInt) / (list.index powtab n)) + list.index powtab (63 - n)
+        else x / list.index powtab n;
+
+      /* rotateL :: int -> int -> int
+
+         Perform a left rotation of the bits in the 2's complement binary
+         representation of the given number by the provided number of places.
+      */
+      rotateL = x: n:
+        let n' = mod n bitSize;
+        in bitOr (shiftL x n') (shiftRU x (bitSize - n'));
+
+      /* rotateR :: int -> int -> int
+
+         Perform a right rotation of the bits in the 2's complement binary
+         representation of the given number by the provided number of places.
+      */
+      rotateR = x: n:
+        let n' = mod n bitSize;
+        in bitOr (shiftRU x n') (shiftL x (bitSize - n'));
+
+      /* popCount :: int -> int
+
+         Counts the number of set bits in the 2's complement binary
+         representation of the given integer.
+      */
+      popCount = x0:
+        # NOTE: this is hardcoded based on 'bitSize'.
+        #
+        # We divide-and-conquer, starting by counting the number of set bits in
+        # every pair of bits, then adding every pair of pairs, and so on.
+        # The constants follow the following pattern:
+        # - 0x5555555555555555 and 0xAAAAAAAAAAAAAAAA (every other bit)
+        # - 0x3333333333333333 and 0xCCCCCCCCCCCCCCCC (every other two bits)
+        # - 0x0F0F0F0F0F0F0F0F and 0xF0F0F0F0F0F0F0F0 (every other four bits)
+        # - ...
+        # - 0x00000000FFFFFFFF and 0xFFFFFFFF00000000
+        let
+          x1 = (bitAnd x0 6148914691236517205) + shiftRU (bitAnd x0 (-6148914691236517206)) 1;
+          x2 = (bitAnd x1 3689348814741910323) + shiftRU (bitAnd x1 (-3689348814741910324)) 2;
+          x3 = (bitAnd x2 1085102592571150095) + shiftRU (bitAnd x2 (-1085102592571150096)) 4;
+          x4 = (bitAnd x3 71777214294589695) + shiftRU (bitAnd x3 (-71777214294589696)) 8;
+          x5 = (bitAnd x4 281470681808895) + shiftRU (bitAnd x4 (-281470681808896)) 16;
+          x6 = (bitAnd x5 4294967295) + shiftRU (bitAnd x5 (-4294967296)) 32;
+        in x6;
+    };
 }
