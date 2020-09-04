@@ -310,6 +310,17 @@ let
         (assertEqual (num.toHexString 4660) "1234")
         (assertEqual (num.toHexString 11259375) "ABCDEF")
       ];
+      gcd = string.unlines [
+        (assertEqual (num.gcd 0 0) 0)
+        (assertEqual (num.gcd 1 1) 1)
+        (assertEqual (num.gcd (-17289472) 198264) 8)
+      ];
+      lcm = string.unlines [
+        (assertEqual (num.lcm 0 0) 0)
+        (assertEqual (num.lcm 1 0) 0)
+        (assertEqual (num.lcm 1 1) 1)
+        (assertEqual (num.lcm 127 (-928)) 117856)
+      ];
     };
     list = section "std.list" {
       laws = string.unlines [

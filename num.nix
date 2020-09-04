@@ -311,4 +311,21 @@ in rec {
   toHexString = x:
     let toHexDigit = string.index "0123456789ABCDEF";
     in string.concatMap toHexDigit (toBaseDigits 16 x);
+
+  /* gcd :: int -> int -> int
+
+     Computes the greatest common divisor of two integers.
+  */
+  gcd = x: y:
+    let gcd' = a: b: if b == 0 then a else gcd' b (rem a b);
+    in gcd' (abs x) (abs y);
+
+  /* lcm :: int -> int -> int
+
+     Computes the least common multiple of two integers.
+  */
+  lcm = x: y:
+    if x == 0 || y == 0
+    then 0
+    else abs (quot x (gcd x y) * y);
 }
