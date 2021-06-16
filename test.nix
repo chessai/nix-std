@@ -325,7 +325,7 @@ let
       nil = assertEqual [] list.nil;
       cons = assertEqual [1 2 3 4 5] (list.cons 1 [2 3 4 5]);
       uncons = string.unlines [
-        (assertEqual null ((list.uncons [])._0))
+        (assertEqual null ((list.uncons [])._0.value))
         (assertEqual [1 2 3 4 5] (list.snoc [1 2 3 4] 5))
       ];
       snoc = assertEqual [1 2 3 4 5] (list.snoc [1 2 3 4] 5);
@@ -390,26 +390,26 @@ let
       ];
 
       unfold = assertEqual [10 9 8 7 6 5 4 3 2 1]
-        (list.unfold (n: if n == 0 then null else { _0 = n; _1 = n - 1; }) 10);
+        (list.unfold (n: if n == 0 then optional.nothing else optional.just { _0 = n; _1 = n - 1; }) 10);
 
       findIndex = string.unlines [
-        (assertEqual 1 (list.findIndex num.even [ 1 2 3 4 ]))
-        (assertEqual null (list.findIndex num.even [ 1 3 5 ]))
+        (assertEqual 1 (list.findIndex num.even [ 1 2 3 4 ]).value)
+        (assertEqual null (list.findIndex num.even [ 1 3 5 ]).value)
       ];
 
       findLastIndex = string.unlines [
-        (assertEqual 3 (list.findLastIndex num.even [ 1 2 3 4 ]))
-        (assertEqual null (list.findLastIndex num.even [ 1 3 5 ]))
+        (assertEqual 3 (list.findLastIndex num.even [ 1 2 3 4 ]).value)
+        (assertEqual null (list.findLastIndex num.even [ 1 3 5 ]).value)
       ];
 
       find = string.unlines [
-        (assertEqual 2 (list.find num.even [ 1 2 3 4 ]))
-        (assertEqual null (list.find num.even [ 1 3 5 ]))
+        (assertEqual 2 (list.find num.even [ 1 2 3 4 ]).value)
+        (assertEqual null (list.find num.even [ 1 3 5 ]).value)
       ];
 
       findLast = string.unlines [
-        (assertEqual 4 (list.findLast num.even [ 1 2 3 4 ]))
-        (assertEqual null (list.findLast num.even [ 1 3 5 ]))
+        (assertEqual 4 (list.findLast num.even [ 1 2 3 4 ]).value)
+        (assertEqual null (list.findLast num.even [ 1 3 5 ]).value)
       ];
 
       splitAt = assertEqual { _0 = [ 1 ]; _1 = [ 2 3 ]; } (list.splitAt 1 [ 1 2 3 ]);
@@ -551,15 +551,15 @@ let
       map = assertEqual (string.map (x: x + " ") "foo") "f o o ";
       imap = assertEqual (string.imap (i: x: builtins.toJSON i + x) "foo") "0f1o2o";
       filter = assertEqual (string.filter (x: x != " ") "foo bar baz") "foobarbaz";
-      findIndex = assertEqual (string.findIndex (x: x == " ") "foo bar baz") 3;
-      findLastIndex = assertEqual (string.findLastIndex (x: x == " ") "foo bar baz") 7;
+      findIndex = assertEqual (string.findIndex (x: x == " ") "foo bar baz").value 3;
+      findLastIndex = assertEqual (string.findLastIndex (x: x == " ") "foo bar baz").value 7;
       find = string.unlines [
-        (assertEqual (string.find (x: x == " ") "foo bar baz") " ")
-        (assertEqual (string.find (x: x == "q") "foo bar baz") null)
+        (assertEqual (string.find (x: x == " ") "foo bar baz").value " ")
+        (assertEqual (string.find (x: x == "q") "foo bar baz").value null)
       ];
       findLast = string.unlines [
-        (assertEqual (string.find (x: x == " ") "foo bar baz") " ")
-        (assertEqual (string.find (x: x == "q") "foo bar baz") null)
+        (assertEqual (string.find (x: x == " ") "foo bar baz").value " ")
+        (assertEqual (string.find (x: x == "q") "foo bar baz").value null)
       ];
       escape = assertEqual (string.escape ["$"] "foo$bar") "foo\\$bar";
       escapeShellArg = assertEqual (string.escapeShellArg "foo 'bar' baz") "'foo '\\''bar'\\'' baz'";

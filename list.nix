@@ -78,9 +78,9 @@ rec {
   */
   match = xs: { nil, cons }@args:
     let u = uncons xs;
-    in if u._0 == null
+    in if u._0 == { value = null; }
        then args.nil
-       else args.cons u._0 u._1;
+       else args.cons u._0.value u._1;
 
   /* empty :: [a] -> bool
 
@@ -257,7 +257,7 @@ rec {
 
      Like 'imap', but with its arguments reversed.
 
-     > list.ifor[ 9 8 7 ] (x: [i x]) 
+     > list.ifor[ 9 8 7 ] (x: [i x])
      [ [ 0 9 ] [ 1 8 ] [ 2 7 ] ]
   */
   ifor = flip imap;
@@ -347,13 +347,13 @@ rec {
   */
   cons = x: xs: [x] ++ xs;
 
-  /* uncons :: [a] -> (Maybe a, [a])
+  /* uncons :: [a] -> (Optional a, [a])
 
      Split a list into its head and tail.
   */
   uncons = xs: if (length xs == 0)
-    then { _0 = null; _1 = []; }
-    else { _0 = builtins.head xs; _1 = builtins.tail xs; };
+    then { _0 = { value = null; };             _1 = []; }
+    else { _0 = { value = builtins.head xs; }; _1 = builtins.tail xs; };
 
   /* snoc :: [a] -> a -> [a]
 
@@ -570,7 +570,7 @@ rec {
     in generate (n: f (index xs0 n) (index ys0 n)) len;
 
   /* zip :: [a] -> [b] -> [(a, b)]
-  
+
      Zip two lists together into a list of tuples. The resulting list has length
      equal to the length of the shorter list.
 
@@ -590,93 +590,95 @@ rec {
     let len = length xs;
     in generate (n: index xs (len - n - 1)) len;
 
-  /* unfold :: (b -> Maybe (a, b)) -> b -> [a]
+  /* unfold :: (b -> Optional (a, b)) -> b -> [a]
 
      Build a list by repeatedly applying a function to a starting value. On each
      step, the function should produce a tuple of the next value to add to the
      list, and the value to pass to the next iteration. To finish building the
      list, the function should return null.
 
-     > list.unfold (n: if n == 0 then null else { _0 = n; _1 = n - 1; }) 10
+     > list.unfold (n: if n == 0 then optional.nothing else optional.just { _0 = n; _1 = n - 1; }) 10
      [ 10 9 8 7 6 5 4 3 2 1 ]
   */
   unfold = f: x0:
     let
       go = xs: next:
-        if next == null
+        if next.value == null
           then xs
-        else go (xs ++ [(next._0)]) (f next._1);
+        else go (xs ++ [(next.value._0)]) (f next.value._1);
     in go [] (f x0);
 
-  /* findIndex :: (a -> bool) -> [a] -> Maybe int
+  /* findIndex :: (a -> bool) -> [a] -> Optional int
 
      Find the index of the first element matching the predicate, or null if no
      element matches the predicate.
 
      > list.findIndex num.even [ 1 2 3 4 ]
-     1
+     { value = 1; }
      > list.findIndex num.even [ 1 3 5 ]
-     null
+     { value = null; }
   */
   findIndex = pred: xs:
     let
       len = length xs;
       go = i:
         if i >= len
-          then null
+          then { value = null; }
         else if pred (index xs i)
-          then i
+          then { value = i; }
         else go (i + 1);
     in go 0;
 
-  /* findLastIndex :: (a -> bool) -> [a] -> Maybe int
+  /* findLastIndex :: (a -> bool) -> [a] -> Optional int
 
      Find the index of the last element matching the predicate, or null if no
      element matches the predicate.
 
      > list.findLastIndex num.even [ 1 2 3 4 ]
-     3
+     { value = 3; }
      > list.findLastIndex num.even [ 1 3 5 ]
-     null
+     { value = null; }
   */
   findLastIndex = pred: xs:
     let
       len = length xs;
       go = i:
         if i < 0
-          then null
+          then { value = null; }
         else if pred (index xs i)
-          then i
+          then { value = i; }
         else go (i - 1);
     in go (len - 1);
 
-  /* find :: (a -> bool) -> [a] -> Maybe a
+  /* find :: (a -> bool) -> [a] -> Optional a
 
      Find the first element matching the predicate, or null if no element
      matches the predicate.
 
      > list.find num.even [ 1 2 3 4 ]
-     2
+     { value = 2; }
      > list.find num.even [ 1 3 5 ]
-     null
+     { value = null; }
   */
   find = pred: xs:
-    let i = findIndex pred xs;
-    in if i == null then null else index xs i;
+    let i = (findIndex pred xs).value;
+    in if i == null
+       then { value = null; }
+       else { value = index xs i; };
 
-  /* findLast :: (a -> bool) -> [a] -> Maybe a
+  /* findLast :: (a -> bool) -> [a] -> Optional a
 
      Find the last element matching the predicate, or null if no element matches
      the predicate.
 
      > list.find num.even [ 1 2 3 4 ]
-     4
+     { value = 4; }
      > list.find num.even [ 1 3 5 ]
-     null
+     { value = null; }
   */
   findLast = pred: xs:
-    let i = findLastIndex pred xs;
-    in if i == null then null else index xs i;
+    let i = (findLastIndex pred xs).value;
+    in if i == null then { value = null; } else { value = index xs i; };
 
   /* splitAt :: int -> [a] -> ([a], [a])
 
@@ -696,7 +698,7 @@ rec {
      [ 2 4 6 ]
   */
   takeWhile = pred: xs:
-    let i = findIndex (x: !pred x) xs;
+    let i = (findIndex (x: !pred x) xs).value;
     in if i == null
       then xs
       else take i xs;
@@ -709,7 +711,7 @@ rec {
      [ 9 10 11 12 14 ]
   */
   dropWhile = pred: xs:
-    let i = findIndex (x: !pred x) xs;
+    let i = (findIndex (x: !pred x) xs).value;
     in if i == null
       then xs
       else drop i xs;
@@ -722,7 +724,7 @@ rec {
      [ 12 14 ]
   */
   takeWhileEnd = pred: xs:
-    let i = findLastIndex (x: !pred x) xs;
+    let i = (findLastIndex (x: !pred x) xs).value;
     in if i == null
       then xs
       else drop (i + 1) xs;
@@ -735,7 +737,7 @@ rec {
      [ 2 4 6 9 10 11 ]
   */
   dropWhileEnd = pred: xs:
-    let i = findLastIndex (x: !pred x) xs;
+    let i = (findLastIndex (x: !pred x) xs).value;
     in if i == null
       then xs
       else take (i + 1) xs;
@@ -749,7 +751,7 @@ rec {
      { _0 = [ 2 4 6 ]; _1 = [ 9 10 11 12 14 ]; }
   */
   span = pred: xs:
-    let n = findIndex (x: !pred x) xs;
+    let n = (findIndex (x: !pred x) xs).value;
     in if n == null
       then { _0 = xs; _1 = []; }
       else splitAt n xs;
@@ -763,7 +765,7 @@ rec {
      { _0 = [ 2 4 6 ]; _1 = [ 9 10 11 12 14 ]; }
   */
   break = pred: xs:
-    let n = findIndex pred xs;
+    let n = (findIndex pred xs).value;
     in if n == null
       then { _0 = xs; _1 = []; }
       else splitAt n xs;
