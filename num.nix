@@ -91,4 +91,66 @@ rec {
                else { index = n.index + 1; found = false; };
         radix = (list.foldl' searcher { index = 0; found = false; } chars).index;
     in builtins.fromJSON (string.concat (list.take radix chars));
+
+  sin = t:
+    let x = toFloat t;
+        _3fac = 6.0;
+        _5fac = 120.0;
+        _7fac = 5040.0;
+        _9fac = 362880.0;
+        _11fac = 39916800.0;
+        _13fac = 6227020800.0;
+        _15fac = 1307674368000.0;
+    in x
+       - pow x 3 / _3fac
+       + pow x 5 / _5fac
+       - pow x 7 / _7fac
+       + pow x 9 / _9fac
+       - pow x 11 / _11fac
+       + pow x 13 / _13fac
+       - pow x 15 / _15fac;
+
+  cos = t:
+    let x = toFloat t;
+        _2fac = 2.0;
+        _4fac = 24.0;
+        _6fac = 720.0;
+        _8fac = 40320.0;
+        _10fac = 3628800.0;
+        _12fac = 479001600.0;
+        _14fac = 87178291200.0;
+        _16fac = 20922789888000.0;
+    in 1.0
+       - pow x 2 / _2fac
+       + pow x 4 / _4fac
+       - pow x 6 / _6fac
+       + pow x 8 / _8fac
+       - pow x 10 / _10fac
+       + pow x 12 / _12fac
+       - pow x 14 / _14fac
+       + pow x 16 / _16fac;
+
+  /*
+  type Complex = { realPart :: float, imagPart :: float }
+  */
+  complex = {
+    /* conjugate :: Complex -> Complex
+
+       The conjugate of a complex number.
+    */
+    conjugate = c: { realPart = c.realPart; imagPart = negate c.imagPart; };
+    /* mkPolar :: float -> float -> Complex
+
+    Form a complex number from polar components of magnitude and phase
+    */
+    mkPolar = r: theta: { realPart = r * cos theta; imagPart = r * sin theta; };
+
+    /* cis :: float -> Complex
+
+    @cis t@ is a complex value with magnitude 1 and phase t (modulo 2pi)
+    */
+    cis = theta: { realPart = cos theta; imagPart = sin theta; };
+
+    # TODO: polar, magnitude, phase
+  };
 }
