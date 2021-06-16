@@ -15,11 +15,11 @@ rec {
   list = import ./list.nix;
   inherit (list) map for;
 
-  maybe = import ./maybe.nix;
-
   monad = import ./monad.nix;
 
   monoid = import ./monoid.nix;
+
+  nullable = import ./nullable.nix;
 
   num = import ./num.nix;
 

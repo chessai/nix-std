@@ -58,6 +58,19 @@ rec {
     };
   };
 
+  semigroup = a: {
+    append = x: y:
+      if x == nothing
+      then y
+      else if y == nothing
+           then x
+           else { value = a.append x.value y.value; };
+  };
+
+  monoid = a: semigroup a // {
+    empty = { value = null; };
+  };
+
   /* match :: Optional a -> { nothing :: b, just :: a -> b } -> b
   */
   match = x: con:

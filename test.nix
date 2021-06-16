@@ -382,7 +382,7 @@ let
         [{ _0 = "foo"; _1 = 0; } { _0 = "foo"; _1 = 1; } { _0 = "foo"; _1 = 2; }]
         (list.zip (list.replicate 10 "foo") (list.range 0 2));
       traverse = string.unlines [
-        (let ls = list.range 1 10; in assertEqual ls (list.traverse maybe.applicative (x: if (num.even x || num.odd x) then x else null) ls))
+        (let ls = list.range 1 10; in assertEqual ls (list.traverse nullable.applicative (x: if (num.even x || num.odd x) then x else null) ls))
       ];
       reverse = string.unlines [
         (assertEqual [3 2 1] (list.reverse [1 2 3]))
@@ -480,6 +480,23 @@ let
               nothing = optional.just (optional.just 1);
               just = k: optional.just (optional.just (k + 5));
             };
+          };
+        })
+        (semigroup (optional.semigroup list.semigroup) {
+          typeName = "optional";
+          associativity = {
+            a = optional.just [1 2 3 4];
+            b = optional.just [5 6 7 8];
+            c = optional.just [9 10];
+          };
+        })
+        (monoid (optional.monoid list.monoid) {
+          typeName = "optional";
+          leftIdentity = {
+            x = optional.just [1 2 3 4 5];
+          };
+          rightIdentity = {
+            x = optional.just ["one" "two" "three" "four" "five"];
           };
         })
       ];

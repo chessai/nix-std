@@ -1,9 +1,9 @@
 with {
   list = import ./list.nix;
-  maybe = import ./maybe.nix;
+  nullable = import ./nullable.nix;
 };
 
 {
   list = list.monad;
-  maybe = maybe.monad;
+  nullable = nullable.monad;
 }
