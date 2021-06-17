@@ -461,6 +461,37 @@ let
         (assertEqual (num.bits.popCount (-6148914691236517206)) (num.bits.bitSize / 2))
         (assertEqual (num.bits.popCount 3689348814741910323) (num.bits.bitSize / 2))
       ];
+      bitScanForward =
+        let
+          case = n: assertEqual (num.bits.bitScanForward (num.bits.bit n)) n;
+          singleBitTests = string.unlines (list.map case (list.range 0 num.bits.bitSize));
+        in string.unlines [
+          singleBitTests
+          (assertEqual (num.bits.bitScanForward 5) 0)
+          (assertEqual (num.bits.bitScanForward (num.bits.bitOr (num.bits.bit (num.bits.bitSize - 1)) 1)) 0)
+          (assertEqual (num.bits.bitScanForward (-1)) 0)
+        ];
+      countTrailingZeros =
+        let
+          case = n: assertEqual (num.bits.countTrailingZeros (num.bits.bit n)) n;
+        in string.unlines (list.map case (list.range 0 num.bits.bitSize));
+      bitScanReverse =
+        let
+          case = n: assertEqual (num.bits.bitScanReverse (num.bits.bit n)) n;
+          singleBitTests = string.unlines (list.map case (list.range 0 num.bits.bitSize));
+        in string.unlines [
+          singleBitTests
+          (assertEqual (num.bits.bitScanReverse 5) 2)
+          (assertEqual (num.bits.bitScanReverse (num.bits.bitOr (num.bits.bit (num.bits.bitSize - 1)) 1)) (num.bits.bitSize - 1))
+          (assertEqual (num.bits.bitScanReverse (-1)) (num.bits.bitSize - 1))
+        ];
+      countLeadingZeros =
+        let
+          case = n:
+            assertEqual
+              (num.bits.countLeadingZeros (num.bits.bit n))
+              (if n == 64 then 64 else num.bits.bitSize - n - 1);
+        in string.unlines (list.map case (list.range 0 num.bits.bitSize));
     };
     list = section "std.list" {
       laws = string.unlines [
