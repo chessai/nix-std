@@ -1,9 +1,8 @@
+{ system ? builtins.currentSystem
+}:
+
 with { std = import ./default.nix; };
 with std;
-
-with {
-  inherit (import <nixpkgs> {}) stdenv;
-};
 
 let
   section = module: tests: ''
@@ -719,16 +718,14 @@ let
     };
   };
 in
-stdenv.mkDerivation {
-  pname = "nix-std-test";
-  version = import ./version.nix;
-
-  src = ./.;
-
-  doCheck = true;
-  phases = [ "unpackPhase" "checkPhase" "installPhase" ];
-
-  checkPhase = string.unlines (builtins.attrValues sections);
-
-  installPhase = "touch $out";
+builtins.derivation {
+  name = "nix-std-test-${import ./version.nix}";
+  inherit system;
+  builder = "/bin/sh";
+  args = [
+    "-c"
+    (string.unlines (builtins.attrValues sections) + ''
+      echo > "$out"
+    '')
+  ];
 }
