@@ -134,6 +134,14 @@ in rec {
 
   sin = t:
     let x = toFloat t;
+        x2 = x * x;
+        x3 = x2 * x;
+        x5 = x2 * x3;
+        x7 = x2 * x5;
+        x9 = x2 * x7;
+        x11 = x2 * x9;
+        x13 = x2 * x11;
+        x15 = x2 * x13;
         _3fac = 6.0;
         _5fac = 120.0;
         _7fac = 5040.0;
@@ -142,16 +150,24 @@ in rec {
         _13fac = 6227020800.0;
         _15fac = 1307674368000.0;
     in x
-       - pow x 3 / _3fac
-       + pow x 5 / _5fac
-       - pow x 7 / _7fac
-       + pow x 9 / _9fac
-       - pow x 11 / _11fac
-       + pow x 13 / _13fac
-       - pow x 15 / _15fac;
+       - x3 / _3fac
+       + x5 / _5fac
+       - x7 / _7fac
+       + x9 / _9fac
+       - x11 / _11fac
+       + x13 / _13fac
+       - x15 / _15fac;
 
   cos = t:
     let x = toFloat t;
+        x2 = x * x;
+        x4 = x2 * x2;
+        x6 = x2 * x4;
+        x8 = x2 * x6;
+        x10 = x2 * x8;
+        x12 = x2 * x10;
+        x14 = x2 * x12;
+        x16 = x2 * x14;
         _2fac = 2.0;
         _4fac = 24.0;
         _6fac = 720.0;
@@ -161,14 +177,14 @@ in rec {
         _14fac = 87178291200.0;
         _16fac = 20922789888000.0;
     in 1.0
-       - pow x 2 / _2fac
-       + pow x 4 / _4fac
-       - pow x 6 / _6fac
-       + pow x 8 / _8fac
-       - pow x 10 / _10fac
-       + pow x 12 / _12fac
-       - pow x 14 / _14fac
-       + pow x 16 / _16fac;
+       - x2 / _2fac
+       + x4 / _4fac
+       - x6 / _6fac
+       + x8 / _8fac
+       - x10 / _10fac
+       + x12 / _12fac
+       - x14 / _14fac
+       + x16 / _16fac;
 
   /*
   type Complex = { realPart :: float, imagPart :: float }
