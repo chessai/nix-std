@@ -155,7 +155,7 @@ rec {
      > list.drop 30 [ 1 2 3 4 5 ]
      []
   */
-  drop = n: slice (max 0 n) (-1);
+  drop = n: slice (max 0 n) null;
 
   /* takeEnd :: int -> [a] -> [a]
 
@@ -534,13 +534,14 @@ rec {
   */
   replicate = n: x: generate (const x) n;
 
-  /* slice :: int -> int -> [a] -> [a]
+  /* slice :: int -> nullable int -> [a] -> [a]
 
      Extract a sublist from a list given a starting position and a length. If
      the starting position is past the end of the list, return the empty list.
      If there are fewer than the requested number of elements after the starting
-     position, take as many as possible. If the requested length is negative,
-     ignore the length and return until the end of the list.
+     position, take as many as possible. If the requested length is null,
+     ignore the length and return until the end of the list. If the requested
+     length is less than 0, the length used will be 0.
 
      Fails if the given offset is negative.
 
@@ -548,16 +549,16 @@ rec {
      [ 3 4 ]
      > list.slice 2 30 [ 1 2 3 4 5 ]
      [ 3 4 5 ]
-     > list.slice 1 (-1) [ 1 2 3 4 5 ]
+     > list.slice 1 null [ 1 2 3 4 5 ]
      [ 2 3 4 5 ]
   */
   slice = offset: len: xs:
-    if offset < 0
-    then throw "std.list.slice: negative start position"
+    if offset < 0 then
+      throw "std.list.slice: negative start position"
     else
       let
         remaining = max 0 (length xs - offset);
-        len' = if len < 0 then remaining else min len remaining;
+        len' = if len == null then remaining else min (max len 0) remaining;
       in generate (i: index xs (i + offset)) len';
 
   /* range :: int -> int -> [int]

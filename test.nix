@@ -689,7 +689,7 @@ let
       slice = string.unlines [
         (assertEqual [3 4] (list.slice 2 2 [ 1 2 3 4 5 ]))
         (assertEqual [3 4 5] (list.slice 2 30 [ 1 2 3 4 5 ]))
-        (assertEqual [2 3 4 5] (list.slice 1 (-1) [ 1 2 3 4 5 ]))
+        (assertEqual [2 3 4 5] (list.slice 1 null [ 1 2 3 4 5 ]))
       ];
       range = assertEqual [1 2 3 4 5] (list.range 1 5);
       partition = string.unlines [
