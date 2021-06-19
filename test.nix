@@ -332,11 +332,11 @@ let
       foldr = assertEqual 55 (list.foldr builtins.add 0 (list.range 1 10));
       foldl' = assertEqual 3628800 (list.foldl' builtins.mul 1 (list.range 1 10));
       foldMap = string.unlines [
-        (assertEqual 1 (list.foldMap std.monoid.first id (list.range 1 10)))
+        (assertEqual (optional.just 1) (list.foldMap std.monoid.first optional.just (list.range 1 10)))
         (assertEqual 321 ((list.foldMap std.monoid.endo id [ (x: builtins.mul x 3) (x: builtins.add x 7) (x: num.pow x 2) ]) 10))
       ];
       fold = string.unlines [
-        (assertEqual 1 (list.fold std.monoid.first (list.range 1 10)))
+        (assertEqual (optional.just 1) (list.fold std.monoid.first (list.map optional.just (list.range 1 10))))
         (assertEqual 321 ((list.fold std.monoid.endo [ (x: builtins.mul x 3) (x: builtins.add x 7) (x: num.pow x 2) ]) 10))
       ];
       sum = assertEqual 55 (list.sum (list.range 1 10));

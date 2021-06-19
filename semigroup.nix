@@ -51,11 +51,20 @@ with rec {
 
   string = imports.string.semigroup;
 
-  /* 'maybe' recovers a monoid from a semigroup by adding 'null' as the empty
-     element. The semigroup's append will simply discard nulls in favor of other
-     elements.
+  /* 'optional' recovers a monoid from a semigroup by adding `optional.nothing`
+     as the empty element. The semigroup's append will simply discard nothings
+     in favor of other elements.
   */
-  maybe = semigroup: {
+  optional = semigroup: {
+    append = x: y:
+      if x.value == null
+        then y
+      else if y.value == null
+        then x
+      else { value = semigroup.append x.value y.value; };
+  };
+
+  nullable = semigroup: {
     append = x: y:
       if x == null
         then y
