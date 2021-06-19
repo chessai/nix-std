@@ -243,15 +243,41 @@ rec {
   */
   modifyAt = i: f: imap (j: x: if j == i then f x else x);
 
-  /* insertAt :: int -> a -> [a] -> [a]
+  /* setAt :: int -> a -> [a] -> [a]
 
      Insert an element as the nth element of a list, returning the new list. If
      the index is out of bounds, return the list unchanged.
 
-     > list.insertAt 1 20 [ 1 2 3 ]
+     > list.setAt 1 20 [ 1 2 3 ]
      [ 1 20 3 ]
   */
-  insertAt = i: x: modifyAt i (const x);
+  setAt = i: x: modifyAt i (const x);
+
+  /* insertAt :: int -> a -> [a] -> [a]
+
+     Insert an element as the nth element of a list, returning the new list. If
+     the index is out of bounds, fail with an exception.
+
+     > list.insertAt 1 20 [ 1 2 3 ]
+     [ 1 20 2 3 ]
+     > list.insertAt 3 20 [ 1 2 3 ]
+     [ 1 2 3 20 ]
+  */
+  insertAt = i: x: xs:
+    let
+      len = length xs;
+    in if i < 0 || i > len
+      then builtins.throw "std.list.insertAt: index out of bounds"
+      else generate
+        (j:
+          if j == i then
+            x
+          else if j < i then
+            index xs j
+          else
+            index xs (j - 1)
+        )
+        (len + 1);
 
   /* ifor :: [a] -> (int -> a -> b) -> [b]
 
@@ -457,6 +483,14 @@ rec {
      false
   */
   all = builtins.all;
+
+  /* none :: (a -> bool) -> [a] -> bool
+
+     Check that none of the elements in a list match the given predicate. Note
+     that if a list is empty, none of the elements match the predicate
+     vacuously.
+  */
+  none = p: xs: builtins.all (x: !p x) xs;
 
   /* count :: (a -> bool) -> [a] -> int
 

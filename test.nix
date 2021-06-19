@@ -624,10 +624,14 @@ let
         (assertEqual [ 1 20 3 ] (list.modifyAt 1 (x: 10 * x) [ 1 2 3 ]))
         (assertEqual [ 1 2 3 ] (list.modifyAt (-3) (x: 10 * x) [ 1 2 3 ]))
       ];
-
+      setAt = string.unlines [
+        (assertEqual [ 1 20 3 ] (list.setAt 1 20 [ 1 2 3 ]))
+        (assertEqual [ 1 2 3 ] (list.setAt (-3) 20 [ 1 2 3 ]))
+      ];
       insertAt = string.unlines [
-        (assertEqual [ 1 20 3 ] (list.insertAt 1 20 [ 1 2 3 ]))
-        (assertEqual [ 1 2 3 ] (list.insertAt (-3) 20 [ 1 2 3 ]))
+        (assertEqual [ 1 20 2 3 ] (list.insertAt 1 20 [ 1 2 3 ]))
+        (assertEqual [ 20 1 2 3 ] (list.insertAt 0 20 [ 1 2 3 ]))
+        (assertEqual [ 1 2 3 20 ] (list.insertAt 3 20 [ 1 2 3 ]))
       ];
       ifor = assertEqual ["foo-0" "bar-1"] (list.ifor ["foo" "bar"] (i: s: s + "-" + builtins.toString i));
       elemAt = assertEqual "barry" (list.elemAt ["bar" "ry" "barry"] 2);
