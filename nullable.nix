@@ -1,6 +1,7 @@
 with rec {
   function = import ./function.nix;
   inherit (function) id;
+  optional = import ./optional.nix;
 };
 
 /*
