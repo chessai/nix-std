@@ -132,33 +132,63 @@ rec {
     then head
     else list.last tail;
 
+  /* slice :: int -> int -> [a] -> [a]
+
+     Extract a sublist from a list given a starting position and a length. If
+     the starting position is past the end of the list, return the empty list.
+     If there are fewer than the requested number of elements after the starting
+     position, take as many as possible. If the requested length is negative,
+     ignore the length and return until the end of the list.
+
+     Fails if the given offset is negative.
+  */
+  slice = offset: len: { head, tail }:
+    if offset < 0
+    then builtins.throw "std.nonempty.slice: negative start position"
+    else
+      let
+        remaining = max 0 (builtins.length tail + 1 - offset);
+        len' = if len < 0 then remaining else min len remaining;
+      in list.generate
+        (i:
+          let i' = i + offset;
+          in if i' == 0
+            then head
+            else list.index tail (i' - 1)
+        )
+        len';
+
   /* take :: int -> nonempty a -> [a]
 
      Take the first n elements of a list. If there are less than n elements,
      return as many elements as possible.
   */
-  take = n: xs: list.take n (toList xs);
+  take = n: slice 0 (max 0 n);
 
   /* drop :: int -> nonempty a -> [a]
 
      Return the list minus the first n elements. If there are less than n
      elements, return the empty list.
   */
-  drop = n: xs: list.drop n (toList xs);
+  drop = n: slice (max 0 n) null;
 
   /* takeEnd :: int -> nonempty a -> [a]
 
      Take the last n elements of a list. If there are less than n elements,
      return as many elements as possible.
   */
-  takeEnd = n: xs: list.takeEnd n (toList xs);
+  takeEnd = n: xs:
+    let
+      len = length xs;
+      n' = min len n;
+    in slice (len - n') n' xs;
 
   /* dropEnd :: int -> nonempty a -> [a]
 
      Return the list minus the last n elements. If there are less than n
      elements, return the empty list.
   */
-  dropEnd = n: xs: list.dropEnd n (toList xs);
+  dropEnd = n: xs: slice 0 (max 0 (length xs - n)) xs;
 
   /* length :: nonempty a -> int
 
