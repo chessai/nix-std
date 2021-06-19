@@ -122,7 +122,7 @@ rec {
   init = xs: slice 0 (length xs - 1) xs;
 
   /* @partial
-     last :: [a] -> [a]
+     last :: [a] -> a
 
      Get the last element of a list. Fails if the list is empty.
 
@@ -135,7 +135,7 @@ rec {
 
   /* take :: int -> [a] -> [a]
 
-     Take the first n elements of a list. If there are less than n elements,
+     Take the first n elements of a list. If there are fewer than n elements,
      return as many elements as possible.
 
      > list.take 3 [ 1 2 3 4 5 ]
@@ -147,7 +147,7 @@ rec {
 
   /* drop :: int -> [a] -> [a]
 
-     Return the list minus the first n elements. If there are less than n
+     Return the list minus the first n elements. If there are fewer than n
      elements, return the empty list.
 
      > list.drop 3 [ 1 2 3 4 5 ]
@@ -159,7 +159,7 @@ rec {
 
   /* takeEnd :: int -> [a] -> [a]
 
-     Take the last n elements of a list. If there are less than n elements,
+     Take the last n elements of a list. If there are fewer than n elements,
      return as many elements as possible.
 
      > list.takeEnd 3 [ 1 2 3 4 5 ]
@@ -175,7 +175,7 @@ rec {
 
   /* dropEnd :: int -> [a] -> [a]
 
-     Return the list minus the last n elements. If there are less than n
+     Return the list minus the last n elements. If there are fewer than n
      elements, return the empty list.
 
      > list.dropEnd 3 [ 1 2 3 4 5 ]
@@ -347,7 +347,7 @@ rec {
   */
   cons = x: xs: [x] ++ xs;
 
-  /* uncons :: [a] -> (Optional a, [a])
+  /* uncons :: [a] -> (optional a, [a])
 
      Split a list into its head and tail.
   */
@@ -504,7 +504,7 @@ rec {
 
      Extract a sublist from a list given a starting position and a length. If
      the starting position is past the end of the list, return the empty list.
-     If there are less than the requested number of elements after the starting
+     If there are fewer than the requested number of elements after the starting
      position, take as many as possible. If the requested length is negative,
      ignore the length and return until the end of the list.
 
@@ -597,7 +597,7 @@ rec {
     let len = length xs;
     in generate (n: index xs (len - n - 1)) len;
 
-  /* unfold :: (b -> Optional (a, b)) -> b -> [a]
+  /* unfold :: (b -> optional (a, b)) -> b -> [a]
 
      Build a list by repeatedly applying a function to a starting value. On each
      step, the function should produce a tuple of the next value to add to the
@@ -615,10 +615,10 @@ rec {
         else go (xs ++ [(next.value._0)]) (f next.value._1);
     in go [] (f x0);
 
-  /* findIndex :: (a -> bool) -> [a] -> Optional int
+  /* findIndex :: (a -> bool) -> [a] -> optional int
 
-     Find the index of the first element matching the predicate, or null if no
-     element matches the predicate.
+     Find the index of the first element matching the predicate, or
+     `optional.nothing` if no element matches the predicate.
 
      > list.findIndex num.even [ 1 2 3 4 ]
      { value = 1; }
@@ -636,10 +636,10 @@ rec {
         else go (i + 1);
     in go 0;
 
-  /* findLastIndex :: (a -> bool) -> [a] -> Optional int
+  /* findLastIndex :: (a -> bool) -> [a] -> optional int
 
-     Find the index of the last element matching the predicate, or null if no
-     element matches the predicate.
+     Find the index of the last element matching the predicate, or
+     `optional.nothing` if no element matches the predicate.
 
      > list.findLastIndex num.even [ 1 2 3 4 ]
      { value = 3; }
@@ -657,10 +657,10 @@ rec {
         else go (i - 1);
     in go (len - 1);
 
-  /* find :: (a -> bool) -> [a] -> Optional a
+  /* find :: (a -> bool) -> [a] -> optional a
 
-     Find the first element matching the predicate, or null if no element
-     matches the predicate.
+     Find the first element matching the predicate, or `optional.nothing` if no
+     element matches the predicate.
 
      > list.find num.even [ 1 2 3 4 ]
      { value = 2; }
@@ -673,10 +673,10 @@ rec {
        then { value = null; }
        else { value = index xs i; };
 
-  /* findLast :: (a -> bool) -> [a] -> Optional a
+  /* findLast :: (a -> bool) -> [a] -> optional a
 
-     Find the last element matching the predicate, or null if no element matches
-     the predicate.
+     Find the last element matching the predicate, or `optional.nothing` if no
+     element matches the predicate.
 
      > list.find num.even [ 1 2 3 4 ]
      { value = 4; }
