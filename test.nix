@@ -198,9 +198,12 @@ let
         (assertEqual (num.max 5 (-3)) 5)
       ];
       compare = string.unlines [
-        (assertEqual (num.compare (-3) 5) (-1))
-        (assertEqual (num.compare 5 5) 0)
-        (assertEqual (num.compare 5 (-3)) 1)
+        (assertEqual (num.compare (-3) 5) "LT")
+        (assertEqual (num.compare 5 5) "EQ")
+        (assertEqual (num.compare 5 (-3)) "GT")
+        (assertEqual (num.compare num.minInt num.maxInt) "LT")
+        (assertEqual (num.compare num.minInt num.minInt) "EQ")
+        (assertEqual (num.compare num.maxInt num.minInt) "GT")
       ];
       quot = string.unlines [
         (assertEqual (num.quot 18 7) 2)

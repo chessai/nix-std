@@ -44,17 +44,18 @@ in rec {
     then y
     else x;
 
-  /* compare :: number -> number -> int
+  /* compare :: number -> number -> "LT" | "EQ" | "GT"
 
-     Compares two numbers and returns -1 if the first is less than the second, 0
-     if they are equal, or 1 if the first is greater than the second.
+     Compares two numbers and returns `"LT"` if the first is less than the
+     second, `"EQ"` if they are equal, or `"GT"` if the first is greater than
+     the second.
   */
   compare = x: y:
     if x < y
-      then -1
+      then "LT"
     else if x > y
-      then 1
-    else 0;
+      then "GT"
+    else "EQ";
 
   /* quot :: integer -> integer -> integer
 
