@@ -332,11 +332,11 @@ let
       foldr = assertEqual 55 (list.foldr builtins.add 0 (list.range 1 10));
       foldl' = assertEqual 3628800 (list.foldl' builtins.mul 1 (list.range 1 10));
       foldMap = string.unlines [
-        (assertEqual 1 (list.foldMap std.monoid.first id (list.range 1 10)))
+        (assertEqual (optional.just 1) (list.foldMap std.monoid.first optional.just (list.range 1 10)))
         (assertEqual 321 ((list.foldMap std.monoid.endo id [ (x: builtins.mul x 3) (x: builtins.add x 7) (x: num.pow x 2) ]) 10))
       ];
       fold = string.unlines [
-        (assertEqual 1 (list.fold std.monoid.first (list.range 1 10)))
+        (assertEqual (optional.just 1) (list.fold std.monoid.first (list.map optional.just (list.range 1 10))))
         (assertEqual 321 ((list.fold std.monoid.endo [ (x: builtins.mul x 3) (x: builtins.add x 7) (x: num.pow x 2) ]) 10))
       ];
       sum = assertEqual 55 (list.sum (list.range 1 10));
@@ -682,22 +682,22 @@ let
       match = string.unlines [
         (assertEqual
           (regex.match "([[:alpha:]]+)([[:digit:]]+)" "foo123")
-          ["foo" "123"])
+          (optional.just ["foo" "123"]))
         (assertEqual
           (regex.match "([[:alpha:]]+)([[:digit:]]+)" "foobar")
-          null)
+          optional.nothing)
       ];
 
       allMatches = assertEqual (regex.allMatches "[[:digit:]]+" "foo 123 bar 456") ["123" "456"];
 
       firstMatch = string.unlines [
-        (assertEqual (regex.firstMatch "[aeiou]" "foobar") "o")
-        (assertEqual (regex.firstMatch "[aeiou]" "xyzzyx") null)
+        (assertEqual (regex.firstMatch "[aeiou]" "foobar") (optional.just "o"))
+        (assertEqual (regex.firstMatch "[aeiou]" "xyzzyx") optional.nothing)
       ];
 
       lastMatch = string.unlines [
-        (assertEqual (regex.lastMatch "[aeiou]" "foobar") "a")
-        (assertEqual (regex.lastMatch "[aeiou]" "xyzzyx") null)
+        (assertEqual (regex.lastMatch "[aeiou]" "foobar") (optional.just "a"))
+        (assertEqual (regex.lastMatch "[aeiou]" "xyzzyx") optional.nothing)
       ];
 
       split = assertEqual (regex.split "(,)" "1,2,3") ["1" [","] "2" [","] "3"];

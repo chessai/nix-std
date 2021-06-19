@@ -1,6 +1,7 @@
 with rec {
   string = import ./string.nix;
   list = import ./list.nix;
+  optional = import ./optional.nix;
 };
 
 rec {
@@ -14,7 +15,7 @@ rec {
 
      For example, to see if a string is contained in another string:
 
-     > regex.firstMatch (regex.escape "a+b") "a+b+c" != null;
+     > optional.isJust (regex.firstMatch (regex.escape "a+b") "a+b+c")
      true
   */
   escape = string.escape ["\\" "^" "$" "." "+" "*" "?" "|" "(" ")" "[" "{" "}"];
@@ -29,23 +30,23 @@ rec {
   */
   capture = re: "(${re})";
 
-  /* match :: regex -> string -> Maybe [string]
+  /* match :: regex -> string -> optional [nullable string]
 
-     Test if a string matches a regular expression exactly. The output is null
-     if the string does not match the regex, or a list of capture groups if it
-     does.
+     Test if a string matches a regular expression exactly. The output is
+     `optional.nothing` if the string does not match the regex, or a list of
+     capture groups if it does.
 
      Fails if the provided regex is invalid.
 
      > regex.match "([[:alpha:]]+)([[:digit:]]+)" "foo123"
-     [ "foo" "123" ]
+     { value = [ "foo" "123" ]; }
      > regex.match "([[:alpha:]]+)([[:digit:]]+)" "foobar"
-     null
+     { value = null; }
 
      To check whether or not a string matches a regex, simply check if the
      result of 'match' is non-null:
 
-     > regex.match "[[:digit:]]+" "123" != null
+     > optional.isJust (regex.match "[[:digit:]]+" "123")
      true
 
      Note that using '+' or '*' on a capture group will only retain the last
@@ -53,15 +54,15 @@ rec {
      capture group will have a null result:
 
      > regex.match "([[:digit:]])*" "123"
-     [ "3" ]
+     { value = [ "3" ]; }
      > regex.match "([[:digit:]])*" ""
-     [ null ]
+     { value = [ null ]; }
   */
-  match = builtins.match;
+  match = re: str: optional.fromNullable (builtins.match re str);
 
   /* allMatches :: regex -> string -> [string]
 
-     Find all occurrances of a regex in a string.
+     Find all occurrences (non-overlapping) of a regex in a string.
 
      Fails if the provided regex is invalid.
 
@@ -71,52 +72,55 @@ rec {
   allMatches = regex: str:
     list.concatMap (g: if builtins.isList g then [(list.head g)] else []) (split (capture regex) str);
 
-  /* firstMatch :: regex -> string -> Maybe string
+  /* firstMatch :: regex -> string -> optional string
 
-     Returns the first occurrence of the pattern in the string, or null if it
-     does not occur.
+     Returns the first occurrence of the pattern in the string, or
+     `optional.nothing` if it does not occur.
 
      > regex.firstMatch "[aeiou]" "foobar"
-     "o"
+     { value = "o"; }
      > regex.firstMatch "[aeiou]" "xyzzyx"
-     null
+     { value = null; }
   */
   firstMatch = regex: str:
     let res = split (capture regex) str;
     in if list.length res > 1
-      then list.head (list.index res 1)
-      else null;
+      then optional.just (list.head (list.index res 1))
+      else optional.nothing;
 
-  /* lastMatch :: regex -> string -> Maybe string
+  /* lastMatch :: regex -> string -> optional string
 
-     Returns the last occurrence of the pattern in the string, or null if it
-     does not occur.
+     Returns the last occurrence of the pattern in the string, or
+     `optional.nothing` if it does not occur.
 
      > regex.lastMatch "[aeiou]" "foobar"
-     "a"
+     { value = "a"; }
      > regex.lastMatch "[aeiou]" "xyzzyx"
-     null
+     { value = null; }
   */
   lastMatch = regex: str:
     let
       res = split (capture regex) str;
       len = list.length res;
     in if len > 1
-      then list.head (list.index res (len - 2))
-      else null;
+      then optional.just (list.head (list.index res (len - 2)))
+      else optional.nothing;
 
-  /* split :: regex -> string -> [string | [Maybe string]]
+  /* split :: regex -> string -> [string | [nullable string]]
 
      Split a string using a regex. The result contains interspersed delimiters
      as lists of capture groups from the regex; see 'match' for details on
      capture groups.
 
+     Note that if there is a leading or trailing delimeter, the first or last
+     element of the result respectively will be the empty string.
+
      Fails if the provided regex is invalid.
 
      > regex.split "," "1,2,3"
-     [ "1" [ ] "2" [ ] "3" [ ] ]
-     > regex.split "(,)" "1,2,3"
-     [ "1" [ "," ] "2" [ "," ] "3" [ "," ] ]
+     [ "1" [ ] "2" [ ] "3" ]
+     > regex.split "(,)" "1,2,3,"
+     [ "1" [ "," ] "2" [ "," ] "3" [ "," ] "" ]
   */
   split = builtins.split;
 
@@ -130,9 +134,9 @@ rec {
      [ "1" "2" "3" ]
   */
   splitOn = regex: str:
-    list.concatMap (g: list.optional (!builtins.isList g) g) (split regex str);
+    list.filter (x: !builtins.isList x) (split regex str);
 
-  /* substituteWith :: regex -> ([Maybe string] -> string) -> string -> string
+  /* substituteWith :: regex -> ([nullable string] -> string) -> string -> string
 
      Perform regex substitution on a string. Replaces each match with the result
      of the given function applied to the capture groups from the regex.

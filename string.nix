@@ -317,9 +317,10 @@ rec {
 
   /* count :: string -> string -> int
 
-     Count the number of times a string appears in a larger string.
+     Count the number of times a string appears in a larger string (not counting
+     overlapping).
 
-     > string.count "o" "foobar"
+     > string.count "oo" "foooobar"
      2
   */
   count = needle: str: list.length (regex.allMatches (regex.escape needle) str);

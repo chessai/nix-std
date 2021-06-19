@@ -77,4 +77,23 @@ rec {
     if x == nothing
     then con.nothing
     else con.just x.value;
+
+  /* fromNullable :: nullable a -> optional a
+  */
+  fromNullable = x:
+    if x == null
+    then nothing
+    else just x;
+
+  /* toNullable :: optional a -> nullable a
+  */
+  toNullable = x: x.value;
+
+  /* optional a -> bool
+  */
+  isJust = x: x.value != null;
+
+  /* optional a -> bool
+  */
+  isNothing = x: x.value == null;
 }

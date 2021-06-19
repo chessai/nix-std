@@ -7,17 +7,18 @@ with rec {
   imports = {
     list = import ./list.nix;
     string = import ./string.nix;
+    optional = import ./optional.nix;
   };
 };
 
 rec {
-  first = maybe semigroup.first;
+  first = optional semigroup.first;
 
-  last = maybe semigroup.last;
+  last = optional semigroup.last;
 
-  min = maybe semigroup.min;
+  min = optional semigroup.min;
 
-  max = maybe semigroup.max;
+  max = optional semigroup.max;
 
   dual = monoid: semigroup.dual monoid // {
     empty = monoid.empty;
@@ -39,9 +40,14 @@ rec {
 
   string = imports.string.monoid;
 
-  /* 'maybe' recovers a monoid from a semigroup by adding 'null' as the empty element.
+  /* 'optional' recovers a monoid from a semigroup by adding `optional.nothing`
+     as the empty element.
   */
-  maybe = sg: semigroup.maybe sg // {
+  optional = sg: semigroup.optional sg // {
+    empty = imports.optional.nothing;
+  };
+
+  nullable = sg: semigroup.nullable sg // {
     empty = null;
   };
 }
