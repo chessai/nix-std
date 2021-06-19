@@ -37,11 +37,11 @@ rec {
   monad = applicative // {
     /* join :: nonempty (nonempty a) -> nonempty a
     */
-    join = concat;
+    join = builtins.throw "TODO";
 
     /* bind :: nonempty a -> (a -> nonempty b) -> nonempty b
     */
-    bind = flip concatMap;
+    bind = builtins.throw "TODO";
   };
 
   monadFix = monad // {
@@ -61,17 +61,39 @@ rec {
     append = xs: ys: xs ++ ys;
   };
 
+  /* make :: a -> [a] -> nonempty a
+
+     Make a nonempty list from a head and a possibly-empty tail.
+  */
+  make = head: tail: { inherit head tail; };
+
+  /* fromList :: [a] -> optional (nonempty a)
+
+     Safely convert a list into a nonempty list, returning `optional.nothing` if
+     the list is empty.
+  */
   fromList = xs:
     if builtins.length xs == 0
-    then builtins.throw "std.nonempty.fromList: empty list"
+    then optional.nothing
+    else optional.just (unsafeFromList xs);
+
+  /* @partial
+     unsafeFromList :: [a] -> nonempty a
+
+     Unsafely convert a list to a nonempty list. Throws an exception if the list
+     is empty.
+  */
+  unsafeFromList = xs:
+    if builtins.length xs == 0
+    then builtins.throw "std.nonempty.unsafeFromList: empty list"
     else { head = list.head xs; tail = list.tail xs; };
 
-  toList = { head, tail }: [head] ++ tail;
+  /* toList :: nonempty a -> [a]
 
-  nonEmpty = xs:
-    if builtins.length xs == 0
-    then optional.nothing
-    else optional.just (fromList xs);
+     Converts the nonempty list to a list by forgetting the invariant that it
+     has at least one element.
+  */
+  toList = { head, tail }: [head] ++ tail;
 
   /* match :: nonempty a -> { cons :: a -> [a] -> b; } -> b
 
@@ -84,13 +106,13 @@ rec {
 
      Get the first element of a nonempty list.
   */
-  head = builtins.head;
+  head = x: x.head;
 
   /* tail :: nonempty a -> [a]
 
      Return the list minus the first element, which may be an empty list.
   */
-  tail = builtins.tail;
+  tail = x: x.tail;
 
   /* init :: nonempty a -> [a]
 
@@ -98,7 +120,7 @@ rec {
   */
   init = { head, tail }:
     if builtins.length tail == 0
-    then [head]
+    then []
     else [head] ++ list.init tail;
 
   /* last :: [a] -> a
@@ -115,28 +137,28 @@ rec {
      Take the first n elements of a list. If there are less than n elements,
      return as many elements as possible.
   */
-  take = builtins.throw "TODO";
+  take = n: xs: list.take n (toList xs);
 
   /* drop :: int -> nonempty a -> [a]
 
      Return the list minus the first n elements. If there are less than n
      elements, return the empty list.
   */
-  drop = builtins.throw "TODO";
+  drop = n: xs: list.drop n (toList xs);
 
   /* takeEnd :: int -> nonempty a -> [a]
 
      Take the last n elements of a list. If there are less than n elements,
      return as many elements as possible.
   */
-  takeEnd = builtins.throw "TODO";
+  takeEnd = n: xs: list.takeEnd n (toList xs);
 
   /* dropEnd :: int -> nonempty a -> [a]
 
      Return the list minus the last n elements. If there are less than n
      elements, return the empty list.
   */
-  dropEnd = builtins.throw "TODO";
+  dropEnd = n: xs: list.dropEnd n (toList xs);
 
   /* length :: nonempty a -> int
 
@@ -155,7 +177,10 @@ rec {
      Apply a function to every element of a nonempty list, returning the
      resulting list.
   */
-  map = builtins.throw "TODO";
+  map = f: { head, tail }: {
+    head = f head;
+    tail = builtins.map f tail;
+  };
 
   /* for :: nonempty a -> (a -> b) -> nonempty b
 
@@ -168,21 +193,40 @@ rec {
      Apply a function to every element of a list and its index, returning the
      resulting list.
   */
-  imap = builtins.throw "TODO";
+  imap = f: { head, tail }: {
+    head = f 0 head;
+    tail = list.imap (ix: x: f (ix + 1) x) tail;
+  };
 
   /* modifyAt :: int -> (a -> a) -> nonempty a -> nonempty a
 
      Apply a function to the nth element of a list, returning the new list. If
      the index is out of bounds, return the list unchanged.
   */
-  modifyAt = builtins.throw "TODO";
+  modifyAt = i: f: imap (j: x: if j == i then f x else x);
 
-  /* insertAt :: int -> a -> nonempty a -> nonempty a
+  /* setAt :: int -> a -> [a] -> [a]
 
      Insert an element as the nth element of a list, returning the new list. If
      the index is out of bounds, return the list unchanged.
+
+     > list.setAt 1 20 [ 1 2 3 ]
+     [ 1 20 3 ]
   */
-  insertAt = builtins.throw "TODO";
+  setAt = i: x: modifyAt i (const x);
+
+  /* insertAt :: int -> a -> [a] -> [a]
+
+     Insert an element as the nth element of a list, returning the new list. If
+     the index is out of bounds, fail with an exception.
+  */
+  insertAt = i: x: { head, tail }:
+    if i < 0 || i > builtins.length tail + 1 then
+      builtins.throw "std.nonempty.insertAt: index out of bounds"
+    else if i == 0 then
+      { head = x; tail = [head] ++ tail; }
+    else
+      { inherit head; tail = list.insertAt (i - 1) x tail; };
 
   /* ifor :: nonempty a -> (int -> a -> b) -> nonempty b
 
@@ -195,33 +239,33 @@ rec {
 
      Get the nth element of a list, indexed from 0.
   */
-  elemAt = builtins.elemAt;
+  elemAt = { head, tail }: n: if n == 0 then head else builtins.elemAt tail (n - 1);
 
   /* @partial
      index :: nonempty a -> int -> a
 
      Get the nth element of a list, indexed from 0. An alias for 'elemAt'.
   */
-  index = builtins.elemAt;
+  index = { head, tail }: n: if n == 0 then head else builtins.elemAt tail (n - 1);
 
   /* filter :: (a -> bool) -> nonempty a -> [a]
 
      Apply a predicate to a list, keeping only the elements that match the
      predicate.
   */
-  filter = builtins.throw "TODO";
+  filter = p: xs: list.filter p (toList xs);
 
   /* elem :: a -> nonempty a -> bool
 
      Check if an element is contained in a list.
   */
-  elem = builtins.throw "TODO";
+  elem = e: { head, tail }: head == e || builtins.elem e tail;
 
   /* notElem :: a -> nonempty a -> bool
 
      Check if an element is not contained in a list.
   */
-  notElem = builtins.throw "TODO";
+  notElem = e: { head, tail }: head != e && !(builtins.elem e tail);
 
   /* cons :: a -> nonempty a -> nonempty a
 
@@ -245,26 +289,34 @@ rec {
 
      Right-associative fold over a nonempty list.
   */
-  foldr = builtins.throw "TODO";
+  foldr = k: { head, tail }:
+    let tailLen = builtins.length tail;
+        go = n:
+          if n == tailLen - 1
+          then builtins.elemAt tail n
+          else k (builtins.elemAt tail n) (go (n + 1));
+    in if tailLen == 0
+      then head
+      else k head (go 0);
 
   /* foldl' :: (b -> a -> b) -> [a] -> b
 
      Strict left-associative fold over a nonempty list.
   */
-  foldl' = builtins.throw "TODO";
+  foldl' = k: { head, tail }: list.foldl' k head tail;
 
   /* foldMap :: Semigroup m => (a -> m) -> nonempty a -> m
 
      Apply a function to each element of a list, turning it into a semigroup,
      and append all the results using the provided semigroup.
   */
-  foldMap = builtins.throw "TODO";
+  foldMap = s: f: foldr (compose s.append f);
 
   /* fold :: Semigroup m => nonempty m -> m
 
      Append all elements of a list using a provided semigroup.
   */
-  fold = builtins.throw "TODO";
+  fold = s: foldr s.append;
 
   /* sum :: nonempty number -> number
 
@@ -285,41 +337,54 @@ rec {
 
      Check if any element of a list matches a predicate.
   */
-  any = builtins.throw "TODO";
+  any = p: { head, tail }: p head || builtins.any p tail;
 
   /* all :: (a -> bool) -> nonempty a -> bool
 
-     Check if every element of a list matches a predicate. Note that if a list
-     is empty, the predicate matches every element vacuously.
+     Check if every element of a list matches a predicate.
   */
-  all = builtins.throw "TODO";
+  all = p: { head, tail }: p head && builtins.all p tail;
+
+  /* none :: (a -> bool) -> [a] -> bool
+
+     Check that none of the elements in a list match the given predicate.
+  */
+  none = p: { head, tail }: (!p head) && builtins.all (x: !p x) tail;
 
   /* count :: (a -> bool) -> nonempty a -> int
 
      Count the number of times a predicate holds on the elements of a list.
   */
-  count = builtins.throw "TODO";
+  count = p: { head, tail }: (if p head then 0 else 1) + list.count p tail;
 
-  /* sequence :: Ap f => nonempty (f a) -> f (nonempty a)
-
-     Sequence a nonempty list using the provided applicative functor.
-  */
-  traverse = builtins.throw "TODO";
-
-
-  /* traverse :: Ap f => (a -> f b) -> nonempty a -> f (nonempty b)
+  /* traverse :: Apply f => (a -> f b) -> nonempty a -> f (nonempty b)
 
      Apply a function to every element of a list, and sequence the results using
      the provided applicative functor.
   */
-  traverse = builtins.throw "TODO";
+  traverse = ap: f: { head, tail }:
+    # TODO: turn applicative constraint here into apply constraint, remove
+    # list.traverse
+    ap.lift2 make (f head) (list.traverse ap f tail);
+
+  /* sequence :: Apply f => nonempty (f a) -> f (nonempty a)
+
+     Sequence a nonempty list using the provided applicative functor.
+  */
+  sequence = ap: { head, tail }:
+    # TODO: turn applicative constraint here into apply constraint, remove
+    # list.sequence
+    ap.fmap (make head) (list.sequence ap tail);
 
   /* zipWith :: (a -> b -> c) -> nonempty a -> nonempty b -> nonempty c
 
      Zip two lists together with the provided function. The resulting list has
      length equal to the length of the shorter list.
   */
-  zipWith = builtins.throw "TODO";
+  zipWith = f: xs: ys: {
+    head = f xs.head ys.head;
+    tail = list.zipWith f xs.tail ys.tail;
+  };
 
   /* zip :: nonempty a -> nonempty b -> nonempty (a, b)
 
@@ -332,5 +397,19 @@ rec {
 
      Reverse a nonempty list.
   */
-  reverse = builtins.throw "TODO";
+  reverse = { head, tail }@xs:
+    let
+      tailLen = builtins.length tail;
+    in if tailLen == 0
+      then xs
+      else {
+        head = list.last tail;
+        tail = list.generate
+          (i:
+            if i == tailLen - 1
+            then head
+            else list.index tail (tailLen - i - 2)
+          )
+          tailLen;
+      };
 }
