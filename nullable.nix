@@ -41,4 +41,17 @@ rec {
     if x == null
     then nothing
     else just x;
+
+  semigroup = a: {
+    append = x: y:
+      if x == null
+        then y
+      else if y == null
+        then x
+      else a.append x y;
+  };
+
+  monoid = a: semigroup a // {
+    empty = null;
+  };
 }
