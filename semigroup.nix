@@ -7,6 +7,7 @@ with rec {
     string = import ./string.nix;
     nullable = import ./nullable.nix;
     optional = import ./optional.nix;
+    nonempty = import ./nonempty.nix;
   };
 };
 
@@ -52,6 +53,8 @@ with rec {
   list = imports.list.semigroup;
 
   string = imports.string.semigroup;
+
+  nonempty = imports.nonempty.semigroup;
 
   nullable = imports.nullable.semigroup;
 

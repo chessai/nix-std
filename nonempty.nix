@@ -37,19 +37,20 @@ rec {
   monad = applicative // {
     /* join :: nonempty (nonempty a) -> nonempty a
     */
-    join = builtins.throw "TODO";
+    join = foldl' semigroup.append;
 
     /* bind :: nonempty a -> (a -> nonempty b) -> nonempty b
     */
-    bind = builtins.throw "TODO";
+    bind = { head, tail }: k:
+      let r = (k head);
+      in make r.head (r.tail ++ toList (bind tail f));
   };
 
   monadFix = monad // {
     /* fix :: (a -> nonempty a) -> nonempty a
     */
     fix = f: match (fix (compose f head)) {
-      nil = nil;
-      cons = x: _: cons x (fix (compose tail f));
+      cons = x: _: make x (fix (compose tail f));
     };
   };
 
@@ -58,7 +59,10 @@ rec {
   semigroup = {
     /* append :: nonempty a -> nonempty a -> nonempty a
     */
-    append = xs: ys: xs ++ ys;
+    append = xs: ys: {
+      head = xs.head;
+      tail = xs.tail ++ [ys.head] ++ ys.tail;
+    };
   };
 
   /* make :: a -> [a] -> nonempty a
