@@ -1,6 +1,7 @@
 with {
   list = import ./list.nix;
   string = import ./string.nix;
+  optional = import ./optional.nix;
 };
 
 let
@@ -237,10 +238,10 @@ in rec {
   */
   round = f: signum f * floor (abs f + 0.5);
 
-  /* tryParseInt :: string -> maybe int
+  /* tryParseInt :: string -> optional int
 
-     Attempt to parse a string into an int. If it fails and the string is still
-     parseable a valid JSON value, return null.
+     Attempt to parse a string into an int. Returns `optional.nothing` on an
+     unsuccessful parse.
   */
   tryParseInt = x:
     let
@@ -248,8 +249,8 @@ in rec {
       matches = builtins.match jsonIntRE x != null;
       res = builtins.fromJSON x;
     in if matches && builtins.isInt res
-      then res
-      else null;
+      then optional.just res
+      else optional.nothing;
 
   /* @partial
      parseInt :: string -> int
@@ -257,16 +258,15 @@ in rec {
      Attempt to parse a string into an int. If parsing fails, throw an
      exception.
   */
-  parseInt = x:
-    let res = tryParseInt x;
-    in if res == null
-      then throw "std.num.parseInt: failed to parse"
-      else res;
+  parseInt = x: optional.match (tryParseInt x) {
+    nothing = throw "std.num.parseInt: failed to parse";
+    just = res: res;
+  };
 
-  /* tryParseFloat :: string -> maybe float
+  /* tryParseFloat :: string -> optional float
 
-     Attempt to parse a string into a float. If it fails and the string is still
-     parseable a valid JSON value, return null.
+     Attempt to parse a string into a float. Returns `optional.nothing` on an
+     unsuccessful parse.
   */
   tryParseFloat = x:
     let
@@ -274,8 +274,8 @@ in rec {
       matches = builtins.match jsonNumberRE x != null;
       res = builtins.fromJSON x;
     in if matches && (builtins.isFloat res || builtins.isInt res)
-      then res
-      else null;
+      then optional.just res
+      else optional.nothing;
 
   /* @partial
      parseFloat :: string -> float
@@ -283,11 +283,10 @@ in rec {
      Attempt to parse a string into a float. If parsing fails, throw an
      exception.
   */
-  parseFloat = x:
-    let res = tryParseFloat x;
-    in if res == null
-      then throw "std.num.parseFloat: failed to parse"
-      else res;
+  parseFloat = x: optional.match (tryParseFloat x) {
+    nothing = throw "std.num.parseFloat: failed to parse";
+    just = res: res;
+  };
 
   /* toBaseDigits :: int -> int -> [int]
 

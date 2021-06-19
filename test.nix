@@ -271,25 +271,25 @@ let
         (assertEqual (num.round (-1.0)) (-1))
       ];
       tryParseInt = string.unlines [
-        (assertEqual (num.tryParseInt "foo") null)
-        (assertEqual (num.tryParseInt "1.0") null)
-        (assertEqual (num.tryParseInt "0") 0)
-        (assertEqual (num.tryParseInt "05") null)
-        (assertEqual (num.tryParseInt "-5") (-5))
-        (assertEqual (num.tryParseInt "") null)
-        (assertEqual (num.tryParseInt "-") null)
+        (assertEqual (num.tryParseInt "foo") optional.nothing)
+        (assertEqual (num.tryParseInt "1.0") optional.nothing)
+        (assertEqual (num.tryParseInt "0") (optional.just 0))
+        (assertEqual (num.tryParseInt "05") optional.nothing)
+        (assertEqual (num.tryParseInt "-5") (optional.just (-5)))
+        (assertEqual (num.tryParseInt "") optional.nothing)
+        (assertEqual (num.tryParseInt "-") optional.nothing)
       ];
       parseInt = assertEqual (num.parseInt "-5") (-5);
       tryParseFloat = string.unlines [
-        (assertEqual (num.tryParseFloat "foo") null)
-        (assertEqual (num.tryParseFloat "-1.80") (-1.8))
-        (assertEqual (num.tryParseFloat "0.0") 0.0)
-        (assertEqual (num.tryParseFloat "0") 0.0)
-        (assertEqual (num.tryParseFloat "0.") null)
-        (assertEqual (num.tryParseFloat ".0") null)
-        (assertEqual (num.tryParseFloat ".") null)
-        (assertEqual (num.tryParseFloat "-01.05e-2") null)
-        (assertEqual (num.tryParseFloat "-1.05e-2") ((-1.05) / 100))
+        (assertEqual (num.tryParseFloat "foo") optional.nothing)
+        (assertEqual (num.tryParseFloat "-1.80") (optional.just (-1.8)))
+        (assertEqual (num.tryParseFloat "0.0") (optional.just 0.0))
+        (assertEqual (num.tryParseFloat "0") (optional.just 0.0))
+        (assertEqual (num.tryParseFloat "0.") optional.nothing)
+        (assertEqual (num.tryParseFloat ".0") optional.nothing)
+        (assertEqual (num.tryParseFloat ".") optional.nothing)
+        (assertEqual (num.tryParseFloat "-01.05e-2") optional.nothing)
+        (assertEqual (num.tryParseFloat "-1.05e-2") (optional.just ((-1.05) / 100)))
       ];
       parseFloat = assertEqual (num.parseFloat "-1.80") (-1.8);
       toBaseDigits = string.unlines [
