@@ -557,6 +557,13 @@ rec {
   */
   traverse = ap: f: foldr (x: ap.lift2 cons (f x)) (ap.pure nil);
 
+  /* sequence :: Applicative f => [f a] -> f [a]
+
+     Use the provided applicative functor to sequence every element of a list of
+     applicatives.
+  */
+  sequence = ap: foldr (x: ap.lift2 cons x) (ap.pure nil);
+
   /* zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
 
      Zip two lists together with the provided function. The resulting list has
