@@ -363,18 +363,30 @@ rec {
      the provided applicative functor.
   */
   traverse = ap: f: { head, tail }:
-    # TODO: turn applicative constraint here into apply constraint, remove
-    # list.traverse
-    ap.lift2 make (f head) (list.traverse ap f tail);
+    let
+      tailLen = builtins.length tail;
+      go = n:
+        if n == tailLen - 1
+        then ap.map list.singleton (f (list.index tail n))
+        else ap.lift2 list.cons (f (list.index tail n)) (go (n + 1));
+    in if tailLen == 0
+      then ap.map (x: make x []) (f head)
+      else ap.lift2 make (f head) (go 0);
 
   /* sequence :: Apply f => nonempty (f a) -> f (nonempty a)
 
      Sequence a nonempty list using the provided applicative functor.
   */
   sequence = ap: { head, tail }:
-    # TODO: turn applicative constraint here into apply constraint, remove
-    # list.sequence
-    ap.fmap (make head) (list.sequence ap tail);
+    let
+      tailLen = builtins.length tail;
+      go = n:
+        if n == tailLen - 1
+        then ap.map list.singleton (list.index tail n)
+        else ap.lift2 list.cons (list.index tail n) (go (n + 1));
+    in if tailLen == 0
+      then ap.map (x: make x []) (f head)
+      else ap.lift2 make head (go 0);
 
   /* zipWith :: (a -> b -> c) -> nonempty a -> nonempty b -> nonempty c
 
