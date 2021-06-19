@@ -127,7 +127,7 @@ in rec {
 
   pi = 3.141592653589793238;
 
-  /* toFloat :: int -> float
+  /* toFloat :: number -> float
 
      Converts an integer to a floating-point number.
   */
