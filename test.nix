@@ -676,6 +676,10 @@ let
         (assertEqual true (list.all (const true) []))
         (assertEqual true (list.all (const false) []))
       ];
+      none = string.unlines [
+        (assertEqual true (list.none num.odd (list.generate (i: builtins.mul i 2) 10)))
+        (assertEqual false (list.none num.odd [2 4 5 8]))
+      ];
       count = assertEqual 11 (list.count num.even (list.generate id 21));
       optional = string.unlines [
         (assertEqual [] (list.optional false null))
@@ -920,6 +924,10 @@ let
       all = string.unlines [
         (assertEqual true (nonempty.all num.even (nonempty.unsafeFromList (list.generate (i: builtins.mul i 2) 10))))
         (assertEqual false (nonempty.all num.even (nonempty.make 2 [4 5 8])))
+      ];
+      none = string.unlines [
+        (assertEqual true (nonempty.none num.odd (nonempty.unsafeFromList (list.generate (i: builtins.mul i 2) 10))))
+        (assertEqual false (nonempty.none num.odd (nonempty.make 2 [4 5 8])))
       ];
       count = assertEqual 11 (nonempty.count num.even (nonempty.unsafeFromList (list.generate id 21)));
       slice = string.unlines [
