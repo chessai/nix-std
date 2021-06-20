@@ -321,7 +321,7 @@ in rec {
   /* toHexString :: int -> string
   */
   toHexString = x:
-    let toHexDigit = string.index "0123456789ABCDEF";
+    let toHexDigit = string.index "0123456789abcdef";
     in string.concatMap toHexDigit (toBaseDigits 16 x);
 
   /* gcd :: int -> int -> int

@@ -307,7 +307,7 @@ let
       toHexString = string.unlines [
         (assertEqual (num.toHexString 0) "0")
         (assertEqual (num.toHexString 4660) "1234")
-        (assertEqual (num.toHexString 11259375) "ABCDEF")
+        (assertEqual (num.toHexString 11259375) "abcdef")
       ];
       gcd = string.unlines [
         (assertEqual (num.gcd 0 0) 0)
