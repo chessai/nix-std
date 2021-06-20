@@ -34,7 +34,7 @@ rec {
 
   /* List monad object
   */
-  monad = applicative // {
+  monad = applicative // rec {
     /* join :: nonempty (nonempty a) -> nonempty a
     */
     join = foldl' semigroup.append;
@@ -42,8 +42,8 @@ rec {
     /* bind :: nonempty a -> (a -> nonempty b) -> nonempty b
     */
     bind = { head, tail }: k:
-      let r = (k head);
-      in make r.head (r.tail ++ toList (bind tail f));
+      let r = k head;
+      in make r.head (r.tail ++ list.monad.bind tail (x: toList (k x)));
   };
 
   monadFix = monad // {
@@ -152,7 +152,7 @@ rec {
     else
       let
         remaining = max 0 (builtins.length tail + 1 - offset);
-        len' = if len < 0 then remaining else min len remaining;
+        len' = if len == null then remaining else min (max len 0) remaining;
       in list.generate
         (i:
           let i' = i + offset;
@@ -389,7 +389,7 @@ rec {
 
      Count the number of times a predicate holds on the elements of a list.
   */
-  count = p: { head, tail }: (if p head then 0 else 1) + list.count p tail;
+  count = p: { head, tail }: (if p head then 1 else 0) + list.count p tail;
 
   /* traverse :: Apply f => (a -> f b) -> nonempty a -> f (nonempty b)
 
