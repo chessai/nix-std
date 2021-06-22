@@ -98,9 +98,9 @@ rec {
 
   /* optional a -> bool
   */
-  isJust = x: x.value != null;
+  isJust = x: x._tag == "just";
 
   /* optional a -> bool
   */
-  isNothing = x: x.value == null;
+  isNothing = x: x._tag == "nothing";
 }

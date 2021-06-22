@@ -1031,6 +1031,18 @@ let
           nothing = "baz";
           just = function.id;
         });
+
+      isJust = string.unlines [
+        (assertEqual true (optional.isJust (optional.just 5)))
+        (assertEqual true (optional.isJust (optional.just null)))
+        (assertEqual false (optional.isJust optional.nothing))
+      ];
+
+      isNothing = string.unlines [
+        (assertEqual false (optional.isNothing (optional.just 5)))
+        (assertEqual false (optional.isNothing (optional.just null)))
+        (assertEqual true (optional.isNothing optional.nothing))
+      ];
     };
 
     string = section "std.string" {
