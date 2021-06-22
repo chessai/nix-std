@@ -39,9 +39,9 @@ rec {
      Fails if the provided regex is invalid.
 
      > regex.match "([[:alpha:]]+)([[:digit:]]+)" "foo123"
-     { value = [ "foo" "123" ]; }
+     { _tag = "just"; value = [ "foo" "123" ]; }
      > regex.match "([[:alpha:]]+)([[:digit:]]+)" "foobar"
-     { value = null; }
+     { _tag = "nothing"; value = null; }
 
      To check whether or not a string matches a regex, simply check if the
      result of 'match' is non-null:
@@ -54,9 +54,9 @@ rec {
      capture group will have a null result:
 
      > regex.match "([[:digit:]])*" "123"
-     { value = [ "3" ]; }
+     { _tag = "just"; value = [ "3" ]; }
      > regex.match "([[:digit:]])*" ""
-     { value = [ null ]; }
+     { _tag = "nothing"; value = [ null ]; }
   */
   match = re: str: optional.fromNullable (builtins.match re str);
 
@@ -78,9 +78,9 @@ rec {
      `optional.nothing` if it does not occur.
 
      > regex.firstMatch "[aeiou]" "foobar"
-     { value = "o"; }
+     { _tag = "just"; value = "o"; }
      > regex.firstMatch "[aeiou]" "xyzzyx"
-     { value = null; }
+     { _tag = "nothing"; value = null; }
   */
   firstMatch = regex: str:
     let res = split (capture regex) str;
@@ -94,9 +94,9 @@ rec {
      `optional.nothing` if it does not occur.
 
      > regex.lastMatch "[aeiou]" "foobar"
-     { value = "a"; }
+     { _tag = "just"; value = "a"; }
      > regex.lastMatch "[aeiou]" "xyzzyx"
-     { value = null; }
+     { _tag = "nothing"; value = null; }
   */
   lastMatch = regex: str:
     let

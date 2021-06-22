@@ -5,6 +5,7 @@ with rec {
   list = import ./list.nix;
   regex = import ./regex.nix;
   num = import ./num.nix;
+  optional = import ./optional.nix;
 };
 
 rec {
@@ -186,10 +187,10 @@ rec {
       len = length str;
       go = i:
         if i >= len
-          then { value = null; }
+        then optional.nothing
         else if pred (index str i)
-          then { value = i; }
-        else go (i + 1);
+             then optional.just i
+             else go (i + 1);
     in go 0;
 
   /* findLastIndex :: (string -> bool) -> string -> Optional int
@@ -202,10 +203,10 @@ rec {
       len = length str;
       go = i:
         if i < 0
-          then { value = null; }
+        then optional.nothing
         else if pred (index str i)
-          then { value = i; }
-        else go (i - 1);
+             then optional.just i
+             else go (i - 1);
     in go (len - 1);
 
   /* find :: (string -> bool) -> string -> Optional string
@@ -215,7 +216,9 @@ rec {
   */
   find = pred: str:
     let i = (findIndex pred str).value;
-    in if i == null then { value = null; } else { value = index str i; };
+    in if i == null
+       then optional.nothing
+       else optional.just (index str i);
 
   /* findLast :: (string -> bool) -> string -> Optional string
 
@@ -224,7 +227,9 @@ rec {
   */
   findLast = pred: str:
     let i = (findLastIndex pred str).value;
-    in if i == null then { value = null; } else { value = index str i; };
+    in if i == null
+       then optional.nothing
+       else optional.just (index str i);
 
   /* escape :: [string] -> string -> string
 

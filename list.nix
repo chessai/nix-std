@@ -4,6 +4,8 @@ with rec {
 
   num = import ./num.nix;
   inherit (num) min max;
+
+  optional = import ./optional.nix;
 };
 
 rec {
@@ -76,11 +78,12 @@ rec {
      > list.match { nil = false; cons = true; } [ 1 2 3 ]
      true
   */
-  match = xs: { nil, cons }@args:
+  match = xs: args:
     let u = uncons xs;
-    in if u._0 == { value = null; }
-       then args.nil
-       else args.cons u._0.value u._1;
+    in optional.match u._0 {
+         nothing = args.nil;
+         just = v: args.cons v u._1;
+       };
 
   /* empty :: [a] -> bool
 
@@ -378,8 +381,12 @@ rec {
      Split a list into its head and tail.
   */
   uncons = xs: if (length xs == 0)
-    then { _0 = { value = null; };             _1 = []; }
-    else { _0 = { value = builtins.head xs; }; _1 = builtins.tail xs; };
+    then { _0 = optional.nothing;
+           _1 = [];
+         }
+    else { _0 = optional.just (builtins.head xs);
+           _1 = builtins.tail xs;
+         };
 
   /* snoc :: [a] -> a -> [a]
 
@@ -645,9 +652,10 @@ rec {
   unfold = f: x0:
     let
       go = xs: next:
-        if next.value == null
-          then xs
-        else go (xs ++ [(next.value._0)]) (f next.value._1);
+        optional.match next {
+          nothing = xs;
+          just = v: go (xs ++ [v._0]) (f v._1);
+        };
     in go [] (f x0);
 
   /* findIndex :: (a -> bool) -> [a] -> optional int
@@ -656,19 +664,19 @@ rec {
      `optional.nothing` if no element matches the predicate.
 
      > list.findIndex num.even [ 1 2 3 4 ]
-     { value = 1; }
+     { _tag = "just"; value = 1; }
      > list.findIndex num.even [ 1 3 5 ]
-     { value = null; }
+     { _tag = "nothing"; value = null; }
   */
   findIndex = pred: xs:
     let
       len = length xs;
       go = i:
         if i >= len
-          then { value = null; }
+        then { _tag = "nothing"; value = null; } #optional.nothing
         else if pred (index xs i)
-          then { value = i; }
-        else go (i + 1);
+             then { _tag = "just"; value = i; } #optional.just i
+             else go (i + 1);
     in go 0;
 
   /* findLastIndex :: (a -> bool) -> [a] -> optional int
@@ -677,19 +685,19 @@ rec {
      `optional.nothing` if no element matches the predicate.
 
      > list.findLastIndex num.even [ 1 2 3 4 ]
-     { value = 3; }
+     { _tag = "just"; value = 3; }
      > list.findLastIndex num.even [ 1 3 5 ]
-     { value = null; }
+     { _tag = "nothing"; value = null; }
   */
   findLastIndex = pred: xs:
     let
       len = length xs;
       go = i:
         if i < 0
-          then { value = null; }
+        then optional.nothing
         else if pred (index xs i)
-          then { value = i; }
-        else go (i - 1);
+             then optional.just i
+             else go (i - 1);
     in go (len - 1);
 
   /* find :: (a -> bool) -> [a] -> optional a
@@ -698,15 +706,15 @@ rec {
      element matches the predicate.
 
      > list.find num.even [ 1 2 3 4 ]
-     { value = 2; }
+     { _tag = "just"; value = 2; }
      > list.find num.even [ 1 3 5 ]
-     { value = null; }
+     { _tag = "nothing"; value = null; }
   */
   find = pred: xs:
-    let i = (findIndex pred xs).value;
-    in if i == null
-       then { value = null; }
-       else { value = index xs i; };
+    optional.match (findIndex pred xs) {
+      nothing = optional.nothing;
+      just = i: optional.just (index xs i);
+    };
 
   /* findLast :: (a -> bool) -> [a] -> optional a
 
@@ -714,13 +722,15 @@ rec {
      element matches the predicate.
 
      > list.find num.even [ 1 2 3 4 ]
-     { value = 4; }
+     { _tag = "just"; value = 4; }
      > list.find num.even [ 1 3 5 ]
-     { value = null; }
+     { _tag = "nothing"; value = null; }
   */
   findLast = pred: xs:
-    let i = (findLastIndex pred xs).value;
-    in if i == null then { value = null; } else { value = index xs i; };
+    optional.match (findLastIndex pred xs) {
+      nothing = optional.nothing;
+      just = i: optional.just (index xs i);
+    };
 
   /* splitAt :: int -> [a] -> ([a], [a])
 
@@ -740,10 +750,10 @@ rec {
      [ 2 4 6 ]
   */
   takeWhile = pred: xs:
-    let i = (findIndex (x: !pred x) xs).value;
-    in if i == null
-      then xs
-      else take i xs;
+    optional.match (findIndex (x: !pred x) xs) {
+      nothing = xs;
+      just = i: take i xs;
+    };
 
   /* dropWhile :: (a -> bool) -> [a] -> [a]
 
@@ -753,10 +763,10 @@ rec {
      [ 9 10 11 12 14 ]
   */
   dropWhile = pred: xs:
-    let i = (findIndex (x: !pred x) xs).value;
-    in if i == null
-      then xs
-      else drop i xs;
+    match (findIndex (x: !pred x) xs) {
+      nothing = xs;
+      just = i: drop i xs;
+    };
 
   /* takeWhileEnd :: (a -> bool) -> [a] -> [a]
 
@@ -766,10 +776,10 @@ rec {
      [ 12 14 ]
   */
   takeWhileEnd = pred: xs:
-    let i = (findLastIndex (x: !pred x) xs).value;
-    in if i == null
-      then xs
-      else drop (i + 1) xs;
+    optional.match (findLastIndex (x: !pred x) xs) {
+      nothing = xs;
+      just = i: drop (i + 1) xs;
+    };
 
   /* dropWhileEnd :: (a -> bool) -> [a] -> [a]
 
@@ -779,10 +789,10 @@ rec {
      [ 2 4 6 9 10 11 ]
   */
   dropWhileEnd = pred: xs:
-    let i = (findLastIndex (x: !pred x) xs).value;
-    in if i == null
-      then xs
-      else take (i + 1) xs;
+    optional.match (findLastIndex (x: !pred x) xs) {
+      nothing = xs;
+      just = i: take (i + 1) xs;
+    };
 
   /* span :: (a -> bool) -> [a] -> ([a], [a])
 
@@ -793,10 +803,10 @@ rec {
      { _0 = [ 2 4 6 ]; _1 = [ 9 10 11 12 14 ]; }
   */
   span = pred: xs:
-    let n = (findIndex (x: !pred x) xs).value;
-    in if n == null
-      then { _0 = xs; _1 = []; }
-      else splitAt n xs;
+    optional.match (findIndex (x: !pred x) xs) {
+      nothing = { _0 = xs; _1 = []; };
+      just = n: splitAt n xs;
+    };
 
   /* break :: (a -> bool) -> [a] -> ([a], [a])
 
@@ -807,8 +817,8 @@ rec {
      { _0 = [ 2 4 6 ]; _1 = [ 9 10 11 12 14 ]; }
   */
   break = pred: xs:
-    let n = (findIndex pred xs).value;
-    in if n == null
-      then { _0 = xs; _1 = []; }
-      else splitAt n xs;
+    optional.match (findIndex pred xs) {
+      nothing = { _0 = xs; _1 = []; };
+      just = n: splitAt n xs;
+    };
 }

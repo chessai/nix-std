@@ -4,56 +4,56 @@ with rec {
 };
 
 /*
-type Optional a = { value :: Nullable a }
+type Optional a = { _tag :: "nothing" | "just", value :: Nullable a }
 */
 
 rec {
   /* nothing :: Optional a
   */
-  nothing = { value = null; };
+  nothing = { _tag = "nothing"; value = null; };
 
   /* just :: a -> Optional a
   */
-  just = x: { value = x; };
+  just = x: { _tag = "just"; value = x; };
 
   functor = {
     /* map :: (a -> b) -> Optional a -> Optional b
     */
     map = f: x:
-      if x == nothing
+      if x._tag == "nothing"
       then nothing
-      else { value = f x.value; };
+      else just (f x.value);
   };
 
   applicative = functor // rec {
     /* pure :: a -> Optional a
     */
-    pure = x: { value = x; };
+    pure = just;
     /* ap :: Optional (a -> b) -> Optional a -> Optional b
     */
     ap = lift2 id;
     /* lift2 :: (a -> b -> c) -> Optional a -> Optional b -> Optional c
     */
     lift2 = f: x: y:
-      if x == nothing
+      if x._tag == "nothing"
       then nothing
-      else if y == nothing
+      else if y._tag == "nothing"
            then nothing
-           else { value = f x.value y.value; };
+           else just (f x.value y.value);
   };
 
   monad = applicative // {
     /* join :: Optional (Optional a) -> Optional a
     */
     join = m: match m {
-      nothing = { value = null; };
-      just = x: { value = x; };
+      nothing = { _tag = "nothing"; value = null; };
+      just = x: { _tag = "just"; value = x; };
     };
 
     /* bind :: Optional a -> (a -> Optional b) -> Optional b
     */
     bind = m: k: match m {
-      nothing = { value = null; };
+      nothing = { _tag = "nothing"; value = null; };
       just = k;
     };
   };
@@ -75,13 +75,13 @@ rec {
      `optional.nothing` as the empty element.
   */
   monoid = a: semigroup a // {
-    empty = { value = null; };
+    empty = { _tag = "nothing"; value = null; };
   };
 
   /* match :: Optional a -> { nothing :: b, just :: a -> b } -> b
   */
   match = x: con:
-    if x == nothing
+    if x._tag == "nothing"
     then con.nothing
     else con.just x.value;
 
