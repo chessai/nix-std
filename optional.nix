@@ -4,13 +4,13 @@ with rec {
 };
 
 /*
-type Optional a = { _tag :: "nothing" | "just", value :: Nullable a }
+type optional a = { _tag :: "nothing" } | { _tag :: "just", value :: Nullable a }
 */
 
 rec {
   /* nothing :: Optional a
   */
-  nothing = { _tag = "nothing"; value = null; };
+  nothing = { _tag = "nothing"; };
 
   /* just :: a -> Optional a
   */
@@ -46,14 +46,14 @@ rec {
     /* join :: Optional (Optional a) -> Optional a
     */
     join = m: match m {
-      nothing = { _tag = "nothing"; value = null; };
+      nothing = { _tag = "nothing"; };
       just = x: { _tag = "just"; value = x; };
     };
 
     /* bind :: Optional a -> (a -> Optional b) -> Optional b
     */
     bind = m: k: match m {
-      nothing = { _tag = "nothing"; value = null; };
+      nothing = { _tag = "nothing"; };
       just = k;
     };
   };
@@ -64,18 +64,18 @@ rec {
   */
   semigroup = a: {
     append = x: y:
-      if x.value == null
+      if x._tag == "nothing"
       then y
-      else if y.value == null
+      else if y._tag == "nothing"
            then x
-           else { value = a.append x.value y.value; };
+           else { _tag = "just"; value = a.append x.value y.value; };
   };
 
   /* `optional.monoid` recovers a monoid from a semigroup by adding
      `optional.nothing` as the empty element.
   */
   monoid = a: semigroup a // {
-    empty = { _tag = "nothing"; value = null; };
+    empty = { _tag = "nothing"; };
   };
 
   /* match :: Optional a -> { nothing :: b, just :: a -> b } -> b
@@ -98,9 +98,9 @@ rec {
 
   /* optional a -> bool
   */
-  isJust = x: x.value != null;
+  isJust = x: x._tag == "just";
 
   /* optional a -> bool
   */
-  isNothing = x: x.value == null;
+  isNothing = x: x._tag == "nothing";
 }

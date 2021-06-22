@@ -646,8 +646,8 @@ let
       nil = assertEqual [] list.nil;
       cons = assertEqual [1 2 3 4 5] (list.cons 1 [2 3 4 5]);
       uncons = string.unlines [
-        (assertEqual null ((list.uncons [])._0.value))
-        (assertEqual [1 2 3 4 5] (list.snoc [1 2 3 4] 5))
+        (assertEqual optional.nothing (list.uncons []))
+        (assertEqual (optional.just { _0 = 1; _1 = [2 3]; }) (list.uncons [1 2 3]))
       ];
       snoc = assertEqual [1 2 3 4 5] (list.snoc [1 2 3 4] 5);
 
@@ -722,23 +722,23 @@ let
         (list.unfold (n: if n == 0 then optional.nothing else optional.just { _0 = n; _1 = n - 1; }) 10);
 
       findIndex = string.unlines [
-        (assertEqual 1 (list.findIndex num.even [ 1 2 3 4 ]).value)
-        (assertEqual null (list.findIndex num.even [ 1 3 5 ]).value)
+        (assertEqual (optional.just 1) (list.findIndex num.even [ 1 2 3 4 ]))
+        (assertEqual optional.nothing (list.findIndex num.even [ 1 3 5 ]))
       ];
 
       findLastIndex = string.unlines [
-        (assertEqual 3 (list.findLastIndex num.even [ 1 2 3 4 ]).value)
-        (assertEqual null (list.findLastIndex num.even [ 1 3 5 ]).value)
+        (assertEqual (optional.just 3) (list.findLastIndex num.even [ 1 2 3 4 ]))
+        (assertEqual optional.nothing (list.findLastIndex num.even [ 1 3 5 ]))
       ];
 
       find = string.unlines [
-        (assertEqual 2 (list.find num.even [ 1 2 3 4 ]).value)
-        (assertEqual null (list.find num.even [ 1 3 5 ]).value)
+        (assertEqual (optional.just 2) (list.find num.even [ 1 2 3 4 ]))
+        (assertEqual optional.nothing (list.find num.even [ 1 3 5 ]))
       ];
 
       findLast = string.unlines [
-        (assertEqual 4 (list.findLast num.even [ 1 2 3 4 ]).value)
-        (assertEqual null (list.findLast num.even [ 1 3 5 ]).value)
+        (assertEqual (optional.just 4) (list.findLast num.even [ 1 2 3 4 ]))
+        (assertEqual optional.nothing (list.findLast num.even [ 1 3 5 ]))
       ];
 
       splitAt = assertEqual { _0 = [ 1 ]; _1 = [ 2 3 ]; } (list.splitAt 1 [ 1 2 3 ]);
@@ -952,45 +952,6 @@ let
         (assertEqual (nonempty.make 3 [2 1]) (nonempty.reverse (nonempty.make 1 [2 3])))
         (assertEqual (nonempty.make 1 []) (nonempty.reverse (nonempty.make 1 [])))
       ];
-
-      # unfold = assertEqual [10 9 8 7 6 5 4 3 2 1]
-      #   (list.unfold (n: if n == 0 then optional.nothing else optional.just { _0 = n; _1 = n - 1; }) 10);
-
-      # findIndex = string.unlines [
-      #   (assertEqual 1 (list.findIndex num.even [ 1 2 3 4 ]).value)
-      #   (assertEqual null (list.findIndex num.even [ 1 3 5 ]).value)
-      # ];
-
-      # findLastIndex = string.unlines [
-      #   (assertEqual 3 (list.findLastIndex num.even [ 1 2 3 4 ]).value)
-      #   (assertEqual null (list.findLastIndex num.even [ 1 3 5 ]).value)
-      # ];
-
-      # find = string.unlines [
-      #   (assertEqual 2 (list.find num.even [ 1 2 3 4 ]).value)
-      #   (assertEqual null (list.find num.even [ 1 3 5 ]).value)
-      # ];
-
-      # findLast = string.unlines [
-      #   (assertEqual 4 (list.findLast num.even [ 1 2 3 4 ]).value)
-      #   (assertEqual null (list.findLast num.even [ 1 3 5 ]).value)
-      # ];
-
-      # splitAt = assertEqual { _0 = [ 1 ]; _1 = [ 2 3 ]; } (list.splitAt 1 [ 1 2 3 ]);
-
-      # takeWhile = assertEqual [ 2 4 6 ] (list.takeWhile num.even [ 2 4 6 9 10 11 12 14 ]);
-
-      # dropWhile = assertEqual [ 9 10 11 12 14 ] (list.dropWhile num.even [ 2 4 6 9 10 11 12 14 ]);
-
-      # takeWhileEnd = assertEqual [ 12 14 ] (list.takeWhileEnd num.even [ 2 4 6 9 10 11 12 14 ]);
-
-      # dropWhileEnd = assertEqual [ 2 4 6 9 10 11 ] (list.dropWhileEnd num.even [ 2 4 6 9 10 11 12 14 ]);
-
-      # span = assertEqual { _0 = [ 2 4 6 ]; _1 = [ 9 10 11 12 14 ]; }
-      #   (list.span num.even [ 2 4 6 9 10 11 12 14 ]);
-
-      # break = assertEqual { _0 = [ 2 4 6 ]; _1 = [ 9 10 11 12 14 ]; }
-      #   (list.break num.odd [ 2 4 6 9 10 11 12 14 ]);
     };
 
     optional = section "std.optional" {
@@ -1070,6 +1031,18 @@ let
           nothing = "baz";
           just = function.id;
         });
+
+      isJust = string.unlines [
+        (assertEqual true (optional.isJust (optional.just 5)))
+        (assertEqual true (optional.isJust (optional.just null)))
+        (assertEqual false (optional.isJust optional.nothing))
+      ];
+
+      isNothing = string.unlines [
+        (assertEqual false (optional.isNothing (optional.just 5)))
+        (assertEqual false (optional.isNothing (optional.just null)))
+        (assertEqual true (optional.isNothing optional.nothing))
+      ];
     };
 
     string = section "std.string" {
@@ -1115,15 +1088,15 @@ let
       map = assertEqual (string.map (x: x + " ") "foo") "f o o ";
       imap = assertEqual (string.imap (i: x: builtins.toJSON i + x) "foo") "0f1o2o";
       filter = assertEqual (string.filter (x: x != " ") "foo bar baz") "foobarbaz";
-      findIndex = assertEqual (string.findIndex (x: x == " ") "foo bar baz").value 3;
-      findLastIndex = assertEqual (string.findLastIndex (x: x == " ") "foo bar baz").value 7;
+      findIndex = assertEqual (string.findIndex (x: x == " ") "foo bar baz") (optional.just 3);
+      findLastIndex = assertEqual (string.findLastIndex (x: x == " ") "foo bar baz") (optional.just 7);
       find = string.unlines [
-        (assertEqual (string.find (x: x == " ") "foo bar baz").value " ")
-        (assertEqual (string.find (x: x == "q") "foo bar baz").value null)
+        (assertEqual (string.find (x: x == " ") "foo bar baz") (optional.just " "))
+        (assertEqual (string.find (x: x == "q") "foo bar baz") optional.nothing)
       ];
       findLast = string.unlines [
-        (assertEqual (string.find (x: x == " ") "foo bar baz").value " ")
-        (assertEqual (string.find (x: x == "q") "foo bar baz").value null)
+        (assertEqual (string.find (x: x == " ") "foo bar baz") (optional.just " "))
+        (assertEqual (string.find (x: x == "q") "foo bar baz") optional.nothing)
       ];
       escape = assertEqual (string.escape ["$"] "foo$bar") "foo\\$bar";
       escapeShellArg = assertEqual (string.escapeShellArg "foo 'bar' baz") "'foo '\\''bar'\\'' baz'";
