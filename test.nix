@@ -177,6 +177,324 @@ let
         (assertEqual (ifThenElse false "left" "right") "right")
       ];
     };
+    num = section "std.num" {
+      negate = assertEqual (num.negate 5) (-5);
+      abs = string.unlines [
+        (assertEqual (num.abs (-5)) 5)
+        (assertEqual (num.abs 5) 5)
+      ];
+      signum = string.unlines [
+        (assertEqual (num.signum 5) 1)
+        (assertEqual (num.signum 0) 0)
+        (assertEqual (num.signum (-5)) (-1))
+      ];
+      min = string.unlines [
+        (assertEqual (num.min (-3) 5) (-3))
+        (assertEqual (num.min 5 (-3)) (-3))
+      ];
+      max = string.unlines [
+        (assertEqual (num.max (-3) 5) 5)
+        (assertEqual (num.max 5 (-3)) 5)
+      ];
+      compare = string.unlines [
+        (assertEqual (num.compare (-3) 5) "LT")
+        (assertEqual (num.compare 5 5) "EQ")
+        (assertEqual (num.compare 5 (-3)) "GT")
+        (assertEqual (num.compare num.minInt num.maxInt) "LT")
+        (assertEqual (num.compare num.minInt num.minInt) "EQ")
+        (assertEqual (num.compare num.maxInt num.minInt) "GT")
+      ];
+      quot = string.unlines [
+        (assertEqual (num.quot 18 7) 2)
+        (assertEqual (num.quot 18 (-7)) (-2))
+        (assertEqual (num.quot (-18) 7) (-2))
+        (assertEqual (num.quot (-18) (-7)) 2)
+      ];
+      rem = string.unlines [
+        (assertEqual (num.rem 18 7) 4)
+        (assertEqual (num.rem 18 (-7)) 4)
+        (assertEqual (num.rem (-18) 7) (-4))
+        (assertEqual (num.rem (-18) (-7)) (-4))
+      ];
+      div = string.unlines [
+        (assertEqual (num.div 18 7) 2)
+        (assertEqual (num.div 18 (-7)) (-3))
+        (assertEqual (num.div (-18) 7) (-3))
+        (assertEqual (num.div (-18) (-7)) 2)
+      ];
+      mod = string.unlines [
+        (assertEqual (num.mod 18 7) 4)
+        (assertEqual (num.mod 18 (-7)) (-3))
+        (assertEqual (num.mod (-18) 7) 3)
+        (assertEqual (num.mod (-18) (-7)) (-4))
+      ];
+      quotRem = assertEqual (num.quotRem (-18) 7) { _0 = (-2); _1 = (-4); };
+      divMod = assertEqual (num.divMod (-18) 7) { _0 = (-3); _1 = 3; };
+      even = string.unlines [
+        (assertEqual (num.even (-1)) false)
+        (assertEqual (num.even 0) true)
+        (assertEqual (num.even 1) false)
+      ];
+      odd = string.unlines [
+        (assertEqual (num.odd (-1)) true)
+        (assertEqual (num.odd 0) false)
+        (assertEqual (num.odd 1) true)
+      ];
+      fac = string.unlines [
+        (assertEqual (num.fac 0) 1)
+        (assertEqual (num.fac 5) 120)
+      ];
+      pow = string.unlines [
+        (assertEqual (num.pow 0 10) 1)
+        (assertEqual (num.pow 1 10) 1)
+        (assertEqual (num.pow 10 0) 1)
+        (assertEqual (num.pow 10 1) 10)
+        (assertEqual (num.pow 10 3) 1000)
+      ];
+      toFloat = assertEqual (num.toFloat 5) 5.0;
+      truncate = string.unlines [
+        (assertEqual (num.truncate 1.5) 1)
+        (assertEqual (num.truncate (-1.5)) (-1))
+      ];
+      floor = string.unlines [
+        (assertEqual (num.floor 1.5) 1)
+        (assertEqual (num.floor (-1.5)) (-2))
+      ];
+      ceil = string.unlines [
+        (assertEqual (num.ceil 1.5) 2)
+        (assertEqual (num.ceil (-1.5)) (-1))
+      ];
+      round = string.unlines [
+        (assertEqual (num.round 1.5) 2)
+        (assertEqual (num.round 1.3) 1)
+        (assertEqual (num.round 1.0) 1)
+        (assertEqual (num.round (-1.5)) (-2))
+        (assertEqual (num.round (-1.3)) (-1))
+        (assertEqual (num.round (-1.0)) (-1))
+      ];
+      tryParseInt = string.unlines [
+        (assertEqual (num.tryParseInt "foo") optional.nothing)
+        (assertEqual (num.tryParseInt "1.0") optional.nothing)
+        (assertEqual (num.tryParseInt "0") (optional.just 0))
+        (assertEqual (num.tryParseInt "05") optional.nothing)
+        (assertEqual (num.tryParseInt "-5") (optional.just (-5)))
+        (assertEqual (num.tryParseInt "") optional.nothing)
+        (assertEqual (num.tryParseInt "-") optional.nothing)
+      ];
+      parseInt = assertEqual (num.parseInt "-5") (-5);
+      tryParseFloat = string.unlines [
+        (assertEqual (num.tryParseFloat "foo") optional.nothing)
+        (assertEqual (num.tryParseFloat "-1.80") (optional.just (-1.8)))
+        (assertEqual (num.tryParseFloat "0.0") (optional.just 0.0))
+        (assertEqual (num.tryParseFloat "0") (optional.just 0.0))
+        (assertEqual (num.tryParseFloat "0.") optional.nothing)
+        (assertEqual (num.tryParseFloat ".0") optional.nothing)
+        (assertEqual (num.tryParseFloat ".") optional.nothing)
+        (assertEqual (num.tryParseFloat "-01.05e-2") optional.nothing)
+        (assertEqual (num.tryParseFloat "-1.05e-2") (optional.just ((-1.05) / 100)))
+      ];
+      parseFloat = assertEqual (num.parseFloat "-1.80") (-1.8);
+      toBaseDigits = string.unlines [
+        (assertEqual (num.toBaseDigits 16 4660) [ 1 2 3 4 ])
+        (assertEqual (num.toBaseDigits 2 85) [ 1 0 1 0 1 0 1 ])
+        (assertEqual (num.toBaseDigits 20 0) [ 0 ])
+      ];
+      fromBaseDigits = string.unlines [
+        (assertEqual (num.fromBaseDigits 2 [ 1 0 1 0 1 0 1 ]) 85)
+        (assertEqual (num.fromBaseDigits 16 [ 1 2 3 4 ]) 4660)
+      ];
+      toHexString = string.unlines [
+        (assertEqual (num.toHexString 0) "0")
+        (assertEqual (num.toHexString 4660) "1234")
+        (assertEqual (num.toHexString 11259375) "abcdef")
+      ];
+      gcd = string.unlines [
+        (assertEqual (num.gcd 0 0) 0)
+        (assertEqual (num.gcd 1 1) 1)
+        (assertEqual (num.gcd (-17289472) 198264) 8)
+      ];
+      lcm = string.unlines [
+        (assertEqual (num.lcm 0 0) 0)
+        (assertEqual (num.lcm 1 0) 0)
+        (assertEqual (num.lcm 1 1) 1)
+        (assertEqual (num.lcm 127 (-928)) 117856)
+      ];
+    };
+    bits = section "std.num.bits" {
+      bitSize = string.unlines [
+        (assertEqual num.maxInt (num.pow 2 (num.bits.bitSize - 1) - 1))
+        (assertEqual num.minInt (- num.pow 2 (num.bits.bitSize - 1)))
+      ];
+      bitAnd = string.unlines [
+        (assertEqual (num.bits.bitAnd 5 3) 1)
+        (assertEqual (num.bits.bitAnd (-1) 6148914691236517205) 6148914691236517205)
+        (assertEqual (num.bits.bitAnd (-6148914691236517206) 6148914691236517205) 0)
+      ];
+      bitOr = string.unlines [
+        (assertEqual (num.bits.bitOr 5 3) 7)
+        (assertEqual (num.bits.bitOr (-1) 6148914691236517205) (-1))
+        (assertEqual (num.bits.bitOr (-6148914691236517206) 6148914691236517205) (-1))
+      ];
+      bitXor = string.unlines [
+        (assertEqual (num.bits.bitXor 5 3) 6)
+        (assertEqual (num.bits.bitXor (-1) 6148914691236517205) (-6148914691236517206))
+        (assertEqual (num.bits.bitXor (-6148914691236517206) 6148914691236517205) (-1))
+      ];
+      bitNot = string.unlines [
+        (assertEqual (num.bits.bitNot 0) (-1))
+        (assertEqual (num.bits.bitNot (-1)) 0)
+        (assertEqual (num.bits.bitNot (-6148914691236517206)) 6148914691236517205)
+      ];
+      bit =
+        let
+          case = n:
+            let
+              # Manually compute 2^n
+              go = acc: m:
+                if m == 0
+                then acc
+                else let r = 2 * acc; in builtins.seq r (go r (m - 1));
+            in assertEqual (num.bits.bit n) (go 1 n);
+        in string.unlines (list.map case (list.range 0 (num.bits.bitSize - 1)));
+      set =
+        let
+          case = n: string.unlines [
+            # Sets cleared bit
+            (assertEqual (num.bits.set 0 n) (num.bits.bit n))
+            # Idempotence on set bit
+            (assertEqual (num.bits.set (num.bits.set 0 n) n) (num.bits.set 0 n))
+          ];
+        in string.unlines (list.map case (list.range 0 (num.bits.bitSize - 1)));
+      clear =
+        let
+          case = n: string.unlines [
+            # Clears set bit
+            (assertEqual (num.bits.clear (-1) n) (num.bits.bitNot (num.bits.bit n)))
+            # Idempotence on cleared bit
+            (assertEqual (num.bits.clear (-1) n) (num.bits.clear (num.bits.clear (-1) n) n))
+          ];
+        in string.unlines (list.map case (list.range 0 (num.bits.bitSize - 1)));
+      toggle =
+        let
+          case = n: string.unlines [
+            # Clears set bit
+            (assertEqual (num.bits.toggle (-1) n) (num.bits.bitNot (num.bits.bit n)))
+            # Sets cleared bit
+            (assertEqual (num.bits.toggle 0 n) (num.bits.bit n))
+          ];
+        in string.unlines (list.map case (list.range 0 (num.bits.bitSize - 1)));
+      test =
+        let
+          case = n: string.unlines [
+            # Set bit
+            (assertEqual (num.bits.test (num.bits.bit n) n) true)
+            # Cleared bit
+            (assertEqual (num.bits.test 0 n) false)
+          ];
+        in string.unlines (list.map case (list.range 0 (num.bits.bitSize - 1)));
+      shiftL = string.unlines [
+        (assertEqual (num.bits.shiftL 5 3) 40)
+        (assertEqual (num.bits.shiftL 0 5) 0)
+        (assertEqual (num.bits.shiftL (-1) 3) (-8))
+        (assertEqual (num.bits.shiftL (-1) 0) (-1))
+        (assertEqual (num.bits.shiftL (-1) num.bits.bitSize) (0))
+        (assertEqual (num.bits.shiftL (num.bits.bit (num.bits.bitSize - 1)) 1) 0)
+        (assertEqual (num.bits.shiftL (-1) (-1)) (-1))
+        (assertEqual (num.bits.shiftL (-1) (-num.bits.bitSize)) (-1))
+      ];
+      shiftLU = string.unlines [
+        (assertEqual (num.bits.shiftLU 5 3) 40)
+        (assertEqual (num.bits.shiftLU 0 5) 0)
+        (assertEqual (num.bits.shiftLU (-1) 3) (-8))
+        (assertEqual (num.bits.shiftLU (-1) 0) (-1))
+        (assertEqual (num.bits.shiftLU (-1) num.bits.bitSize) (0))
+        (assertEqual (num.bits.shiftLU (num.bits.bit (num.bits.bitSize - 1)) 1) 0)
+        (assertEqual (num.bits.shiftLU (-1) (-1)) num.maxInt)
+        (assertEqual (num.bits.shiftLU (-1) (-num.bits.bitSize)) 0)
+      ];
+      shiftR = string.unlines [
+        (assertEqual (num.bits.shiftR 5 3) 0)
+        (assertEqual (num.bits.shiftR 0 5) 0)
+        (assertEqual (num.bits.shiftR (-30) 2) (-8))
+        (assertEqual (num.bits.shiftR (-1) 3) (-1))
+        (assertEqual (num.bits.shiftR (-1) 0) (-1))
+        (assertEqual (num.bits.shiftR (-1) num.bits.bitSize) (-1))
+        (assertEqual (num.bits.shiftR (-1) (-1)) (-2))
+        (assertEqual (num.bits.shiftR (-1) (-num.bits.bitSize)) 0)
+      ];
+      shiftRU = string.unlines [
+        (assertEqual (num.bits.shiftRU 5 3) 0)
+        (assertEqual (num.bits.shiftRU 0 5) 0)
+        (assertEqual (num.bits.shiftRU (-30) 2) 4611686018427387896)
+        (assertEqual (num.bits.shiftRU (-1) 3) 2305843009213693951)
+        (assertEqual (num.bits.shiftRU (-1) 0) (-1))
+        (assertEqual (num.bits.shiftRU (-1) num.bits.bitSize) 0)
+        (assertEqual (num.bits.shiftRU (-1) (-1)) (-2))
+        (assertEqual (num.bits.shiftRU (-1) (-num.bits.bitSize)) 0)
+      ];
+      rotateL = string.unlines [
+        (assertEqual (num.bits.rotateL 5 3) 40)
+        (assertEqual (num.bits.rotateL 0 5) 0)
+        (assertEqual (num.bits.rotateL (-1) 3) (-1))
+        (assertEqual (num.bits.rotateL (-1) 0) (-1))
+        (assertEqual (num.bits.rotateL (-1) (num.bits.bitSize + 5)) (-1))
+        (assertEqual (num.bits.rotateL 15 num.bits.bitSize) 15)
+        (assertEqual (num.bits.rotateL (num.bits.bit (num.bits.bitSize - 1)) 1) 1)
+        (assertEqual (num.bits.rotateL (-1) (-1)) (-1))
+        (assertEqual (num.bits.rotateL 15 (-2)) (-4611686018427387901))
+        (assertEqual (num.bits.rotateL 15 (-num.bits.bitSize)) 15)
+      ];
+      rotateR = string.unlines [
+        (assertEqual (num.bits.rotateR 25 3) 2305843009213693955)
+        (assertEqual (num.bits.rotateR 0 5) 0)
+        (assertEqual (num.bits.rotateR (-1) 3) (-1))
+        (assertEqual (num.bits.rotateR (-1) 0) (-1))
+        (assertEqual (num.bits.rotateR (-1) (num.bits.bitSize + 5)) (-1))
+        (assertEqual (num.bits.rotateR 15 num.bits.bitSize) 15)
+        (assertEqual (num.bits.rotateR 1 1) (num.bits.bit (num.bits.bitSize - 1)))
+        (assertEqual (num.bits.rotateR (-1) (-1)) (-1))
+        (assertEqual (num.bits.rotateR 15 (-2)) 60)
+        (assertEqual (num.bits.rotateR 15 (-num.bits.bitSize)) 15)
+      ];
+      popCount = string.unlines [
+        (assertEqual (num.bits.popCount 0) 0)
+        (assertEqual (num.bits.popCount (-1)) num.bits.bitSize)
+        (assertEqual (num.bits.popCount 6148914691236517205) (num.bits.bitSize / 2))
+        (assertEqual (num.bits.popCount (-6148914691236517206)) (num.bits.bitSize / 2))
+        (assertEqual (num.bits.popCount 3689348814741910323) (num.bits.bitSize / 2))
+      ];
+      bitScanForward =
+        let
+          case = n: assertEqual (num.bits.bitScanForward (num.bits.bit n)) n;
+          singleBitTests = string.unlines (list.map case (list.range 0 num.bits.bitSize));
+        in string.unlines [
+          singleBitTests
+          (assertEqual (num.bits.bitScanForward 5) 0)
+          (assertEqual (num.bits.bitScanForward (num.bits.bitOr (num.bits.bit (num.bits.bitSize - 1)) 1)) 0)
+          (assertEqual (num.bits.bitScanForward (-1)) 0)
+        ];
+      countTrailingZeros =
+        let
+          case = n: assertEqual (num.bits.countTrailingZeros (num.bits.bit n)) n;
+        in string.unlines (list.map case (list.range 0 num.bits.bitSize));
+      bitScanReverse =
+        let
+          case = n: assertEqual (num.bits.bitScanReverse (num.bits.bit n)) n;
+          singleBitTests = string.unlines (list.map case (list.range 0 num.bits.bitSize));
+        in string.unlines [
+          singleBitTests
+          (assertEqual (num.bits.bitScanReverse 5) 2)
+          (assertEqual (num.bits.bitScanReverse (num.bits.bitOr (num.bits.bit (num.bits.bitSize - 1)) 1)) (num.bits.bitSize - 1))
+          (assertEqual (num.bits.bitScanReverse (-1)) (num.bits.bitSize - 1))
+        ];
+      countLeadingZeros =
+        let
+          case = n:
+            assertEqual
+              (num.bits.countLeadingZeros (num.bits.bit n))
+              (if n == 64 then 64 else num.bits.bitSize - n - 1);
+        in string.unlines (list.map case (list.range 0 num.bits.bitSize));
+    };
     list = section "std.list" {
       laws = string.unlines [
         (functor list.functor {
