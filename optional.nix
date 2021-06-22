@@ -4,7 +4,7 @@ with rec {
 };
 
 /*
-type Optional a = { _tag :: "nothing } | { _tag :: "just", value :: Nullable a }
+type optional a = { _tag :: "nothing" } | { _tag :: "just", value :: Nullable a }
 */
 
 rec {
