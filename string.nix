@@ -215,10 +215,10 @@ rec {
      if no such character is present.
   */
   find = pred: str:
-    let i = (findIndex pred str).value;
-    in if i == null
+    let i = findIndex pred str;
+    in if i._tag == "nothing"
        then _optional.nothing
-       else _optional.just (index str i);
+       else _optional.just (index str i.value);
 
   /* findLast :: (string -> bool) -> string -> Optional string
 
@@ -226,10 +226,10 @@ rec {
      if no such character is present.
   */
   findLast = pred: str:
-    let i = (findLastIndex pred str).value;
-    in if i == null
+    let i = findLastIndex pred str;
+    in if i._tag == "nothing"
        then _optional.nothing
-       else _optional.just (index str i);
+       else _optional.just (index str i.value);
 
   /* escape :: [string] -> string -> string
 
@@ -427,40 +427,40 @@ rec {
      Return the longest prefix of the string that satisfies the predicate.
   */
   takeWhile = pred: str:
-    let n = (findIndex (x: !pred x) str).value;
-    in if n == null
+    let n = findIndex (x: !pred x) str;
+    in if n._tag == "nothing"
       then str
-      else take n str;
+      else take n.value str;
 
   /* dropWhile :: (string -> bool) -> string -> string
 
      Return the rest of the string after the prefix returned by 'takeWhile'.
   */
   dropWhile = pred: str:
-    let n = (findIndex (x: !pred x) str).value;
-    in if n == null
+    let n = findIndex (x: !pred x) str;
+    in if n._tag == "nothing"
       then ""
-      else drop n str;
+      else drop n.value str;
 
   /* takeWhileEnd :: (string -> bool) -> string -> string
 
      Return the longest suffix of the string that satisfies the predicate.
   */
   takeWhileEnd = pred: str:
-    let n = (findLastIndex (x: !pred x) str).value;
-    in if n == null
+    let n = findLastIndex (x: !pred x) str;
+    in if n._tag == "nothing"
       then ""
-      else drop (n + 1) str;
+      else drop (n.value + 1) str;
 
   /* dropWhileEnd :: (string -> bool) -> string -> string
 
      Return the rest of the string after the suffix returned by 'takeWhileEnd'.
   */
   dropWhileEnd = pred: str:
-    let n = (findLastIndex (x: !pred x) str).value;
-    in if n == null
+    let n = findLastIndex (x: !pred x) str;
+    in if n._tag == "nothing"
       then ""
-      else take (n + 1) str;
+      else take (n.value + 1) str;
 
   /* splitAt :: int -> string -> (string, string)
 
@@ -474,10 +474,10 @@ rec {
      of this prefix and the rest of the string.
   */
   span = pred: str:
-    let n = (findIndex (x: !pred x) str).value;
-    in if n == null
+    let n = findIndex (x: !pred x) str;
+    in if n._tag == "nothing"
       then { _0 = str; _1 = ""; }
-      else splitAt n str;
+      else splitAt n.value str;
 
   /* break :: (string -> bool) -> string -> (string, string)
 
@@ -485,10 +485,10 @@ rec {
      return a tuple of this prefix and the rest of the string.
   */
   break = pred: str:
-    let n = (findIndex pred str).value;
-    in if n == null
+    let n = findIndex pred str;
+    in if n._tag == "nothing"
       then { _0 = str; _1 = ""; }
-      else splitAt n str;
+      else splitAt n.value str;
 
   /* reverse :: string -> string
 

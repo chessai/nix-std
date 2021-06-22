@@ -4,13 +4,13 @@ with rec {
 };
 
 /*
-type Optional a = { _tag :: "nothing" | "just", value :: Nullable a }
+type Optional a = { _tag :: "nothing } | { _tag :: "just", value :: Nullable a }
 */
 
 rec {
   /* nothing :: Optional a
   */
-  nothing = { _tag = "nothing"; value = null; };
+  nothing = { _tag = "nothing"; };
 
   /* just :: a -> Optional a
   */
@@ -46,14 +46,14 @@ rec {
     /* join :: Optional (Optional a) -> Optional a
     */
     join = m: match m {
-      nothing = { _tag = "nothing"; value = null; };
+      nothing = { _tag = "nothing"; };
       just = x: { _tag = "just"; value = x; };
     };
 
     /* bind :: Optional a -> (a -> Optional b) -> Optional b
     */
     bind = m: k: match m {
-      nothing = { _tag = "nothing"; value = null; };
+      nothing = { _tag = "nothing"; };
       just = k;
     };
   };
@@ -75,7 +75,7 @@ rec {
      `optional.nothing` as the empty element.
   */
   monoid = a: semigroup a // {
-    empty = { _tag = "nothing"; value = null; };
+    empty = { _tag = "nothing"; };
   };
 
   /* match :: Optional a -> { nothing :: b, just :: a -> b } -> b

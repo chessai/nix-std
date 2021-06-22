@@ -665,14 +665,14 @@ rec {
      > list.findIndex num.even [ 1 2 3 4 ]
      { _tag = "just"; value = 1; }
      > list.findIndex num.even [ 1 3 5 ]
-     { _tag = "nothing"; value = null; }
+     { _tag = "nothing"; }
   */
   findIndex = pred: xs:
     let
       len = length xs;
       go = i:
         if i >= len
-        then { _tag = "nothing"; value = null; } #_optional.nothing
+        then { _tag = "nothing"; } #_optional.nothing
         else if pred (index xs i)
              then { _tag = "just"; value = i; } #_optional.just i
              else go (i + 1);
@@ -686,7 +686,7 @@ rec {
      > list.findLastIndex num.even [ 1 2 3 4 ]
      { _tag = "just"; value = 3; }
      > list.findLastIndex num.even [ 1 3 5 ]
-     { _tag = "nothing"; value = null; }
+     { _tag = "nothing"; }
   */
   findLastIndex = pred: xs:
     let
@@ -707,7 +707,7 @@ rec {
      > list.find num.even [ 1 2 3 4 ]
      { _tag = "just"; value = 2; }
      > list.find num.even [ 1 3 5 ]
-     { _tag = "nothing"; value = null; }
+     { _tag = "nothing"; }
   */
   find = pred: xs:
     _optional.match (findIndex pred xs) {
@@ -723,7 +723,7 @@ rec {
      > list.find num.even [ 1 2 3 4 ]
      { _tag = "just"; value = 4; }
      > list.find num.even [ 1 3 5 ]
-     { _tag = "nothing"; value = null; }
+     { _tag = "nothing"; }
   */
   findLast = pred: xs:
     _optional.match (findLastIndex pred xs) {

@@ -41,7 +41,7 @@ rec {
      > regex.match "([[:alpha:]]+)([[:digit:]]+)" "foo123"
      { _tag = "just"; value = [ "foo" "123" ]; }
      > regex.match "([[:alpha:]]+)([[:digit:]]+)" "foobar"
-     { _tag = "nothing"; value = null; }
+     { _tag = "nothing"; }
 
      To check whether or not a string matches a regex, simply check if the
      result of 'match' is non-null:
@@ -56,7 +56,7 @@ rec {
      > regex.match "([[:digit:]])*" "123"
      { _tag = "just"; value = [ "3" ]; }
      > regex.match "([[:digit:]])*" ""
-     { _tag = "nothing"; value = [ null ]; }
+     { _tag = "just"; value = [ null ]; }
   */
   match = re: str: optional.fromNullable (builtins.match re str);
 
@@ -80,7 +80,7 @@ rec {
      > regex.firstMatch "[aeiou]" "foobar"
      { _tag = "just"; value = "o"; }
      > regex.firstMatch "[aeiou]" "xyzzyx"
-     { _tag = "nothing"; value = null; }
+     { _tag = "nothing"; }
   */
   firstMatch = regex: str:
     let res = split (capture regex) str;
@@ -96,7 +96,7 @@ rec {
      > regex.lastMatch "[aeiou]" "foobar"
      { _tag = "just"; value = "a"; }
      > regex.lastMatch "[aeiou]" "xyzzyx"
-     { _tag = "nothing"; value = null; }
+     { _tag = "nothing"; }
   */
   lastMatch = regex: str:
     let
