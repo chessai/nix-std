@@ -122,7 +122,7 @@ rec {
   init = xs: slice 0 (length xs - 1) xs;
 
   /* @partial
-     last :: [a] -> [a]
+     last :: [a] -> a
 
      Get the last element of a list. Fails if the list is empty.
 
@@ -135,7 +135,7 @@ rec {
 
   /* take :: int -> [a] -> [a]
 
-     Take the first n elements of a list. If there are less than n elements,
+     Take the first n elements of a list. If there are fewer than n elements,
      return as many elements as possible.
 
      > list.take 3 [ 1 2 3 4 5 ]
@@ -147,7 +147,7 @@ rec {
 
   /* drop :: int -> [a] -> [a]
 
-     Return the list minus the first n elements. If there are less than n
+     Return the list minus the first n elements. If there are fewer than n
      elements, return the empty list.
 
      > list.drop 3 [ 1 2 3 4 5 ]
@@ -155,11 +155,11 @@ rec {
      > list.drop 30 [ 1 2 3 4 5 ]
      []
   */
-  drop = n: slice (max 0 n) (-1);
+  drop = n: slice (max 0 n) null;
 
   /* takeEnd :: int -> [a] -> [a]
 
-     Take the last n elements of a list. If there are less than n elements,
+     Take the last n elements of a list. If there are fewer than n elements,
      return as many elements as possible.
 
      > list.takeEnd 3 [ 1 2 3 4 5 ]
@@ -175,7 +175,7 @@ rec {
 
   /* dropEnd :: int -> [a] -> [a]
 
-     Return the list minus the last n elements. If there are less than n
+     Return the list minus the last n elements. If there are fewer than n
      elements, return the empty list.
 
      > list.dropEnd 3 [ 1 2 3 4 5 ]
@@ -243,15 +243,41 @@ rec {
   */
   modifyAt = i: f: imap (j: x: if j == i then f x else x);
 
-  /* insertAt :: int -> a -> [a] -> [a]
+  /* setAt :: int -> a -> [a] -> [a]
 
      Insert an element as the nth element of a list, returning the new list. If
      the index is out of bounds, return the list unchanged.
 
-     > list.insertAt 1 20 [ 1 2 3 ]
+     > list.setAt 1 20 [ 1 2 3 ]
      [ 1 20 3 ]
   */
-  insertAt = i: x: modifyAt i (const x);
+  setAt = i: x: modifyAt i (const x);
+
+  /* insertAt :: int -> a -> [a] -> [a]
+
+     Insert an element as the nth element of a list, returning the new list. If
+     the index is out of bounds, fail with an exception.
+
+     > list.insertAt 1 20 [ 1 2 3 ]
+     [ 1 20 2 3 ]
+     > list.insertAt 3 20 [ 1 2 3 ]
+     [ 1 2 3 20 ]
+  */
+  insertAt = i: x: xs:
+    let
+      len = length xs;
+    in if i < 0 || i > len
+      then builtins.throw "std.list.insertAt: index out of bounds"
+      else generate
+        (j:
+          if j == i then
+            x
+          else if j < i then
+            index xs j
+          else
+            index xs (j - 1)
+        )
+        (len + 1);
 
   /* ifor :: [a] -> (int -> a -> b) -> [b]
 
@@ -347,7 +373,7 @@ rec {
   */
   cons = x: xs: [x] ++ xs;
 
-  /* uncons :: [a] -> (Optional a, [a])
+  /* uncons :: [a] -> (optional a, [a])
 
      Split a list into its head and tail.
   */
@@ -458,6 +484,14 @@ rec {
   */
   all = builtins.all;
 
+  /* none :: (a -> bool) -> [a] -> bool
+
+     Check that none of the elements in a list match the given predicate. Note
+     that if a list is empty, none of the elements match the predicate
+     vacuously.
+  */
+  none = p: xs: builtins.all (x: !p x) xs;
+
   /* count :: (a -> bool) -> [a] -> int
 
      Count the number of times a predicate holds on the elements of a list.
@@ -500,13 +534,14 @@ rec {
   */
   replicate = n: x: generate (const x) n;
 
-  /* slice :: int -> int -> [a] -> [a]
+  /* slice :: int -> nullable int -> [a] -> [a]
 
      Extract a sublist from a list given a starting position and a length. If
      the starting position is past the end of the list, return the empty list.
-     If there are less than the requested number of elements after the starting
-     position, take as many as possible. If the requested length is negative,
-     ignore the length and return until the end of the list.
+     If there are fewer than the requested number of elements after the starting
+     position, take as many as possible. If the requested length is null,
+     ignore the length and return until the end of the list. If the requested
+     length is less than 0, the length used will be 0.
 
      Fails if the given offset is negative.
 
@@ -514,16 +549,16 @@ rec {
      [ 3 4 ]
      > list.slice 2 30 [ 1 2 3 4 5 ]
      [ 3 4 5 ]
-     > list.slice 1 (-1) [ 1 2 3 4 5 ]
+     > list.slice 1 null [ 1 2 3 4 5 ]
      [ 2 3 4 5 ]
   */
   slice = offset: len: xs:
-    if offset < 0
-    then throw "std.list.slice: negative start position"
+    if offset < 0 then
+      throw "std.list.slice: negative start position"
     else
       let
         remaining = max 0 (length xs - offset);
-        len' = if len < 0 then remaining else min len remaining;
+        len' = if len == null then remaining else min (max len 0) remaining;
       in generate (i: index xs (i + offset)) len';
 
   /* range :: int -> int -> [int]
@@ -556,6 +591,13 @@ rec {
      the provided applicative functor.
   */
   traverse = ap: f: foldr (x: ap.lift2 cons (f x)) (ap.pure nil);
+
+  /* sequence :: Applicative f => [f a] -> f [a]
+
+     Use the provided applicative functor to sequence every element of a list of
+     applicatives.
+  */
+  sequence = ap: foldr (x: ap.lift2 cons x) (ap.pure nil);
 
   /* zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
 
@@ -590,7 +632,7 @@ rec {
     let len = length xs;
     in generate (n: index xs (len - n - 1)) len;
 
-  /* unfold :: (b -> Optional (a, b)) -> b -> [a]
+  /* unfold :: (b -> optional (a, b)) -> b -> [a]
 
      Build a list by repeatedly applying a function to a starting value. On each
      step, the function should produce a tuple of the next value to add to the
@@ -608,10 +650,10 @@ rec {
         else go (xs ++ [(next.value._0)]) (f next.value._1);
     in go [] (f x0);
 
-  /* findIndex :: (a -> bool) -> [a] -> Optional int
+  /* findIndex :: (a -> bool) -> [a] -> optional int
 
-     Find the index of the first element matching the predicate, or null if no
-     element matches the predicate.
+     Find the index of the first element matching the predicate, or
+     `optional.nothing` if no element matches the predicate.
 
      > list.findIndex num.even [ 1 2 3 4 ]
      { value = 1; }
@@ -629,10 +671,10 @@ rec {
         else go (i + 1);
     in go 0;
 
-  /* findLastIndex :: (a -> bool) -> [a] -> Optional int
+  /* findLastIndex :: (a -> bool) -> [a] -> optional int
 
-     Find the index of the last element matching the predicate, or null if no
-     element matches the predicate.
+     Find the index of the last element matching the predicate, or
+     `optional.nothing` if no element matches the predicate.
 
      > list.findLastIndex num.even [ 1 2 3 4 ]
      { value = 3; }
@@ -650,10 +692,10 @@ rec {
         else go (i - 1);
     in go (len - 1);
 
-  /* find :: (a -> bool) -> [a] -> Optional a
+  /* find :: (a -> bool) -> [a] -> optional a
 
-     Find the first element matching the predicate, or null if no element
-     matches the predicate.
+     Find the first element matching the predicate, or `optional.nothing` if no
+     element matches the predicate.
 
      > list.find num.even [ 1 2 3 4 ]
      { value = 2; }
@@ -666,10 +708,10 @@ rec {
        then { value = null; }
        else { value = index xs i; };
 
-  /* findLast :: (a -> bool) -> [a] -> Optional a
+  /* findLast :: (a -> bool) -> [a] -> optional a
 
-     Find the last element matching the predicate, or null if no element matches
-     the predicate.
+     Find the last element matching the predicate, or `optional.nothing` if no
+     element matches the predicate.
 
      > list.find num.even [ 1 2 3 4 ]
      { value = 4; }
