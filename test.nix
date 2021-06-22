@@ -646,8 +646,8 @@ let
       nil = assertEqual [] list.nil;
       cons = assertEqual [1 2 3 4 5] (list.cons 1 [2 3 4 5]);
       uncons = string.unlines [
-        (assertEqual null ((list.uncons [])._0.value))
-        (assertEqual [1 2 3 4 5] (list.snoc [1 2 3 4] 5))
+        (assertEqual optional.nothing (list.uncons []))
+        (assertEqual (optional.just { _0 = 1; _1 = [2 3]; }) (list.uncons [1 2 3]))
       ];
       snoc = assertEqual [1 2 3 4 5] (list.snoc [1 2 3 4] 5);
 

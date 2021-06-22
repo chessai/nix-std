@@ -5,7 +5,7 @@ with rec {
   num = import ./num.nix;
   inherit (num) min max;
 
-  optional = import ./optional.nix;
+  _optional = import ./optional.nix;
 };
 
 rec {
@@ -80,10 +80,10 @@ rec {
   */
   match = xs: args:
     let u = uncons xs;
-    in optional.match u._0 {
-         nothing = args.nil;
-         just = v: args.cons v u._1;
-       };
+    in _optional.match u {
+      nothing = args.nil;
+      just = v: args.cons v._0 v._1;
+    };
 
   /* empty :: [a] -> bool
 
@@ -376,17 +376,16 @@ rec {
   */
   cons = x: xs: [x] ++ xs;
 
-  /* uncons :: [a] -> (optional a, [a])
+  /* uncons :: [a] -> optional (a, [a])
 
      Split a list into its head and tail.
   */
   uncons = xs: if (length xs == 0)
-    then { _0 = optional.nothing;
-           _1 = [];
-         }
-    else { _0 = optional.just (builtins.head xs);
-           _1 = builtins.tail xs;
-         };
+    then _optional.nothing
+    else _optional.just {
+      _0 = builtins.head xs;
+      _1 = builtins.tail xs;
+    };
 
   /* snoc :: [a] -> a -> [a]
 
@@ -652,7 +651,7 @@ rec {
   unfold = f: x0:
     let
       go = xs: next:
-        optional.match next {
+        _optional.match next {
           nothing = xs;
           just = v: go (xs ++ [v._0]) (f v._1);
         };
@@ -673,9 +672,9 @@ rec {
       len = length xs;
       go = i:
         if i >= len
-        then { _tag = "nothing"; value = null; } #optional.nothing
+        then { _tag = "nothing"; value = null; } #_optional.nothing
         else if pred (index xs i)
-             then { _tag = "just"; value = i; } #optional.just i
+             then { _tag = "just"; value = i; } #_optional.just i
              else go (i + 1);
     in go 0;
 
@@ -694,9 +693,9 @@ rec {
       len = length xs;
       go = i:
         if i < 0
-        then optional.nothing
+        then _optional.nothing
         else if pred (index xs i)
-             then optional.just i
+             then _optional.just i
              else go (i - 1);
     in go (len - 1);
 
@@ -711,9 +710,9 @@ rec {
      { _tag = "nothing"; value = null; }
   */
   find = pred: xs:
-    optional.match (findIndex pred xs) {
-      nothing = optional.nothing;
-      just = i: optional.just (index xs i);
+    _optional.match (findIndex pred xs) {
+      nothing = _optional.nothing;
+      just = i: _optional.just (index xs i);
     };
 
   /* findLast :: (a -> bool) -> [a] -> optional a
@@ -727,9 +726,9 @@ rec {
      { _tag = "nothing"; value = null; }
   */
   findLast = pred: xs:
-    optional.match (findLastIndex pred xs) {
-      nothing = optional.nothing;
-      just = i: optional.just (index xs i);
+    _optional.match (findLastIndex pred xs) {
+      nothing = _optional.nothing;
+      just = i: _optional.just (index xs i);
     };
 
   /* splitAt :: int -> [a] -> ([a], [a])
@@ -750,7 +749,7 @@ rec {
      [ 2 4 6 ]
   */
   takeWhile = pred: xs:
-    optional.match (findIndex (x: !pred x) xs) {
+    _optional.match (findIndex (x: !pred x) xs) {
       nothing = xs;
       just = i: take i xs;
     };
@@ -763,7 +762,7 @@ rec {
      [ 9 10 11 12 14 ]
   */
   dropWhile = pred: xs:
-    match (findIndex (x: !pred x) xs) {
+    _optional.match (findIndex (x: !pred x) xs) {
       nothing = xs;
       just = i: drop i xs;
     };
@@ -776,7 +775,7 @@ rec {
      [ 12 14 ]
   */
   takeWhileEnd = pred: xs:
-    optional.match (findLastIndex (x: !pred x) xs) {
+    _optional.match (findLastIndex (x: !pred x) xs) {
       nothing = xs;
       just = i: drop (i + 1) xs;
     };
@@ -789,7 +788,7 @@ rec {
      [ 2 4 6 9 10 11 ]
   */
   dropWhileEnd = pred: xs:
-    optional.match (findLastIndex (x: !pred x) xs) {
+    _optional.match (findLastIndex (x: !pred x) xs) {
       nothing = xs;
       just = i: take (i + 1) xs;
     };
@@ -803,7 +802,7 @@ rec {
      { _0 = [ 2 4 6 ]; _1 = [ 9 10 11 12 14 ]; }
   */
   span = pred: xs:
-    optional.match (findIndex (x: !pred x) xs) {
+    _optional.match (findIndex (x: !pred x) xs) {
       nothing = { _0 = xs; _1 = []; };
       just = n: splitAt n xs;
     };
@@ -817,7 +816,7 @@ rec {
      { _0 = [ 2 4 6 ]; _1 = [ 9 10 11 12 14 ]; }
   */
   break = pred: xs:
-    optional.match (findIndex pred xs) {
+    _optional.match (findIndex pred xs) {
       nothing = { _0 = xs; _1 = []; };
       just = n: splitAt n xs;
     };

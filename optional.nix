@@ -64,11 +64,11 @@ rec {
   */
   semigroup = a: {
     append = x: y:
-      if x.value == null
+      if x._tag == "nothing"
       then y
-      else if y.value == null
+      else if y._tag == "nothing"
            then x
-           else { value = a.append x.value y.value; };
+           else { _tag = "just"; value = a.append x.value y.value; };
   };
 
   /* `optional.monoid` recovers a monoid from a semigroup by adding
