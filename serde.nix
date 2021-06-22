@@ -14,7 +14,7 @@ in rec {
 
   /* toTOML :: Set -> TOML
   */
-  toTOML =
+  toTOML = data:
     let
       # Escape a TOML key; if it is a string that's a valid identifier, we don't
       # need to add quotes
@@ -32,7 +32,7 @@ in rec {
         if builtins.isList v
           then "[${string.concatMapSep ", " tomlValue v}]"
         else if builtins.isAttrs v
-          then "{${string.concatMapSep ", " ({ name, value }: tomlKV name value) (set.toList v)}}"
+          then "{${string.concatMapSep ", " ({ _0, _1 }: tomlKV _0 _1) (set.toList v)}}"
         else tomlEscapeValue v;
 
       # Render an inline TOML "key = value" pair
@@ -67,27 +67,29 @@ in rec {
           attrList = set.toList attrs;
 
           # Render values that are objects using tables
-          tableSplit = list.partition ({ value, ... }: builtins.isAttrs value) attrList;
+          tableSplit = list.partition ({ _1, ... }: builtins.isAttrs _1) attrList;
           tablesToml = string.concatMapSep "\n\n"
-            ({ name, value }: tomlTable prefix name value)
+            ({ _0, _1 }: tomlTable prefix _0 _1)
             tableSplit._0;
 
           # Use [[]] syntax only on arrays of attrsets
           tableArraySplit = list.partition
-            ({ value, ... }: builtins.isList value && value != [] && list.all builtins.isAttrs value)
+            ({ _1, ... }: builtins.isList _1 && _1 != [] && list.all builtins.isAttrs _1)
             tableSplit._1;
           tableArraysToml = string.concatMapSep "\n\n"
-            ({ name, value }: tomlTableArray prefix name value)
+            ({ _0, _1 }: tomlTableArray prefix _0 _1)
             tableArraySplit._0;
 
           # Everything else becomes bare "key = value" pairs
-          pairsToml = string.concatMapSep "\n" ({ name, value }: tomlKV name value) tableArraySplit._1;
+          pairsToml = string.concatMapSep "\n" ({ _0, _1 }: tomlKV _0 _1) tableArraySplit._1;
         in string.concatSep "\n\n" (list.concatMap optionalNonempty [
           pairsToml
           tablesToml
           tableArraysToml
         ]);
-    in go [];
+    in if builtins.isAttrs data
+      then go [] data
+      else builtins.throw "std.serde.toTOML: input data is not an attribute set, cannot be converted to TOML";
 
   /* @partial
      fromTOML :: TOML -> Set
