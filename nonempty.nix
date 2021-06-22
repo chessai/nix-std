@@ -9,6 +9,8 @@ with rec {
   optional = import ./optional.nix;
 };
 
+/* type nonempty a = { head :: a, tail :: [a] }
+*/
 rec {
   /* List functor object
   */
