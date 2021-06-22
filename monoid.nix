@@ -7,6 +7,7 @@ with rec {
   imports = {
     list = import ./list.nix;
     string = import ./string.nix;
+    nullable = import ./nullable.nix;
     optional = import ./optional.nix;
   };
 };
@@ -40,14 +41,7 @@ rec {
 
   string = imports.string.monoid;
 
-  /* 'optional' recovers a monoid from a semigroup by adding `optional.nothing`
-     as the empty element.
-  */
-  optional = sg: semigroup.optional sg // {
-    empty = imports.optional.nothing;
-  };
+  nullable = imports.nullable.monoid;
 
-  nullable = sg: semigroup.nullable sg // {
-    empty = null;
-  };
+  optional = imports.optional.monoid;
 }

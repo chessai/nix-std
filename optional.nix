@@ -58,15 +58,22 @@ rec {
     };
   };
 
+  /* `optional.semigroup` recovers a monoid from a semigroup by adding
+     `optional.nothing` as the empty element. The semigroup's append will simply
+     discard nothings in favor of other elements.
+  */
   semigroup = a: {
     append = x: y:
-      if x == nothing
+      if x.value == null
       then y
-      else if y == nothing
+      else if y.value == null
            then x
            else { value = a.append x.value y.value; };
   };
 
+  /* `optional.monoid` recovers a monoid from a semigroup by adding
+     `optional.nothing` as the empty element.
+  */
   monoid = a: semigroup a // {
     empty = { value = null; };
   };

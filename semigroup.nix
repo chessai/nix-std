@@ -5,6 +5,8 @@ with rec {
   imports = {
     list = import ./list.nix;
     string = import ./string.nix;
+    nullable = import ./nullable.nix;
+    optional = import ./optional.nix;
   };
 };
 
@@ -51,25 +53,7 @@ with rec {
 
   string = imports.string.semigroup;
 
-  /* 'optional' recovers a monoid from a semigroup by adding `optional.nothing`
-     as the empty element. The semigroup's append will simply discard nothings
-     in favor of other elements.
-  */
-  optional = semigroup: {
-    append = x: y:
-      if x.value == null
-        then y
-      else if y.value == null
-        then x
-      else { value = semigroup.append x.value y.value; };
-  };
+  nullable = imports.nullable.semigroup;
 
-  nullable = semigroup: {
-    append = x: y:
-      if x == null
-        then y
-      else if y == null
-        then x
-      else semigroup.append x y;
-  };
+  optional = imports.optional.semigroup;
 }
