@@ -27,7 +27,7 @@ in
         ]
       )
       (builtins.attrValues constructors);
-    assert builtins.all (name: name != "_tag") (builtins.attrNames constructors);
+    assert builtins.all (name: !builtins.elem name [ "_tag" "_type" ]) (builtins.attrNames constructors);
     let
       needsTag = builtins.length (builtins.attrNames constructors) > 1;
       genNaryCtor = base: args:
@@ -43,7 +43,7 @@ in
         in go base 0;
       makeCtor = ctorName: spec:
         let
-          baseAttrs = if needsTag then { _tag = ctorName; } else {};
+          baseAttrs = if needsTag then { _tag = ctorName; _type = name; } else { _type = name; };
         in
           if spec == null then
             # nullary
