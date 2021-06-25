@@ -3,12 +3,15 @@ with std;
 
 rec {
   section = module: tests: ''
-    echo "testing ${module}"
-    ${string.concat
-        (list.map
-          (test: ''echo "...${test._0}"...; ${test._1}'')
-            (set.toList tests))
-     }
+    (
+      echo "''${SECTION_INDENT:-}testing ${module}"
+      SECTION_INDENT="''${SECTION_INDENT:-}  "
+      ${string.concat
+          (list.map
+            (test: ''echo "''${SECTION_INDENT}...${test._0}"...; ${test._1}'')
+              (set.toList tests))
+       }
+    )
   '';
 
   assertEqual = x: y:
@@ -29,7 +32,7 @@ rec {
   lawCheck = { lawName, typeName ? null }: x: y:
     if x == y
     then ''
-      printf "[${typeName}] ${lawName}: ✓"
+      printf "  ''${SECTION_INDENT:-}[${typeName}] ${lawName}: ✓"
       echo ""
     ''
     else ''
@@ -40,7 +43,7 @@ rec {
           y = ${string.escape [''"''] (types.show y)}
 
       "
-      printf "[${typeName}] ${lawName}: ✗"
+      printf "  ''${SECTION_INDENT:-}[${typeName}] ${lawName}: ✗"
       printf "$ERR"
       exit 1
     '';

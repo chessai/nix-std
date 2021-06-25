@@ -28,6 +28,6 @@
     {
       lib = import ./default.nix;
     } // eachDefaultSystem (system: {
-      checks.nix-std-test = import ./test.nix { inherit system; };
+      checks.nix-std-test = import ./test/default.nix { inherit system; };
     });
 }
