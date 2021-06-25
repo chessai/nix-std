@@ -1,2 +1,2 @@
 language: nix
-script: nix-build test.nix
+script: nix-build test/default.nix
