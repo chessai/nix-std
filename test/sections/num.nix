@@ -80,7 +80,21 @@ section "std.num" {
   toFloat = assertEqual (num.toFloat 5) 5.0;
   truncate = string.unlines [
     (assertEqual (num.truncate 1.5) 1)
+    (assertEqual (num.truncate 20.1) 20)
+    (assertEqual (num.truncate 5.0) 5)
+    (assertEqual (num.truncate (-5.0)) (-5))
     (assertEqual (num.truncate (-1.5)) (-1))
+    (assertEqual (num.truncate (-20.1)) (-20))
+    (assertEqual (num.truncate 0) 0)
+    (assertEqual (num.truncate 0.0) 0)
+    (assertEqual (num.truncate 1.0e6) 1000000)
+    (assertEqual (num.truncate (-1.0e6)) (-1000000))
+    (assertEqual (num.truncate 1.1e6) 1100000)
+    (assertEqual (num.truncate (-1.1e6)) (-1100000))
+    # num.truncate (num.toFloat num.maxInt) would overflow, but it should
+    # succeed on an integer regardless
+    (assertEqual (num.truncate num.maxInt) num.maxInt)
+    (assertEqual (num.truncate num.minInt) num.minInt)
   ];
   floor = string.unlines [
     (assertEqual (num.floor 1.5) 1)

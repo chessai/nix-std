@@ -216,10 +216,42 @@ in rec {
 
      Truncate a float to an int, rounding towards 0.
   */
-  # may god have mercy on my soul.
-  truncate = f:
-    let chars = builtins.toJSON f;
-    in builtins.fromJSON (string.takeWhile (c: c != ".") chars);
+  truncate =
+    if builtins ? floor
+    then
+      f:
+        if builtins.isInt f then
+          f
+        else if f <= (toFloat minInt) || f >= (toFloat maxInt) then
+          builtins.throw "std.num.truncate: integer overflow"
+        else if f >= 0 then
+          builtins.floor f
+        else
+          let
+            p = builtins.floor f;
+          in if p < f
+            then p + 1
+            else p
+    else
+      f:
+        let
+          # truncate float in range [0.0,2.0)
+          truncate1 = x: if x < 1.0 then 0 else 1;
+          go = x:
+            if x < 1.0 then
+              0
+            else
+              let y = 2 * go (x / 2);
+              in y + truncate1 (x - y);
+        in
+          if builtins.isInt f then
+            f
+          else if f <= (toFloat minInt) || f >= (toFloat maxInt) then
+            builtins.throw "std.num.truncate: integer overflow"
+          else if f < 0.0 then
+            -go (-f)
+          else
+            go f;
 
   /* floor :: float -> int
 
