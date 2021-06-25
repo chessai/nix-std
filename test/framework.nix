@@ -11,7 +11,7 @@ rec {
             (test: ''echo "''${SECTION_INDENT}...${test._0}"...; ${test._1}'')
               (set.toList tests))
        }
-    )
+    ) || exit $?
   '';
 
   assertEqual = x: y:
