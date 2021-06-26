@@ -44,7 +44,7 @@ rec {
 
   # O(log(keys))
   match1 = o: { assign }:
-    let k = list.head (keys o);
+    let k = builtins.head (keys o);
         v = o."${k}";
         r = builtins.removeAttrs o [k];
     in assign k v r;

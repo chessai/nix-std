@@ -353,7 +353,7 @@ in rec {
   /* toHexString :: int -> string
   */
   toHexString = x:
-    let toHexDigit = string.index "0123456789abcdef";
+    let toHexDigit = string.unsafeIndex "0123456789abcdef";
     in string.concatMap toHexDigit (toBaseDigits 16 x);
 
   /* gcd :: int -> int -> int
@@ -515,7 +515,7 @@ in rec {
           then shiftR x (-n)
         else if n >= bitSize
           then 0
-        else x * list.index powtab n;
+        else x * builtins.elemAt powtab n;
 
       /* shiftLU :: int -> int -> int
 
@@ -536,7 +536,7 @@ in rec {
           then shiftRU x (-n)
         else if n >= bitSize
           then 0
-        else x * list.index powtab n;
+        else x * builtins.elemAt powtab n;
 
       /* shiftR :: int -> int -> int
 
@@ -557,8 +557,8 @@ in rec {
         else if n >= bitSize
           then (if x < 0 then -1 else 0)
         else if x < 0
-          then ((x + minInt) / (list.index powtab n)) - list.index powtab (63 - n)
-        else x / list.index powtab n;
+          then ((x + minInt) / (builtins.elemAt powtab n)) - builtins.elemAt powtab (63 - n)
+        else x / builtins.elemAt powtab n;
 
       /* shiftRU :: int -> int -> int
 
@@ -578,8 +578,8 @@ in rec {
         else if n >= bitSize
           then 0
         else if x < 0
-          then ((x + minInt) / (list.index powtab n)) + list.index powtab (63 - n)
-        else x / list.index powtab n;
+          then ((x + minInt) / (builtins.elemAt powtab n)) + builtins.elemAt powtab (63 - n)
+        else x / builtins.elemAt powtab n;
 
       /* rotateL :: int -> int -> int
 
@@ -668,7 +668,7 @@ in rec {
             then 64
           else if x0 < 0 # MSB is set
             then 63
-          else list.index debruijn (shiftRU (x6 * 285870213051386505) 58);
+          else builtins.elemAt debruijn (shiftRU (x6 * 285870213051386505) 58);
 
       /* countLeadingZeros :: int -> int
 

@@ -70,7 +70,7 @@ rec {
      [ "123" "456" ]
   */
   allMatches = regex: str:
-    list.concatMap (g: if builtins.isList g then [(list.head g)] else []) (split (capture regex) str);
+    list.concatMap (g: if builtins.isList g then [(builtins.head g)] else []) (split (capture regex) str);
 
   /* firstMatch :: regex -> string -> optional string
 
@@ -85,7 +85,7 @@ rec {
   firstMatch = regex: str:
     let res = split (capture regex) str;
     in if list.length res > 1
-      then optional.just (list.head (list.index res 1))
+      then optional.just (builtins.head (builtins.elemAt res 1))
       else optional.nothing;
 
   /* lastMatch :: regex -> string -> optional string
@@ -103,7 +103,7 @@ rec {
       res = split (capture regex) str;
       len = list.length res;
     in if len > 1
-      then optional.just (list.head (list.index res (len - 2)))
+      then optional.just (builtins.head (builtins.elemAt res (len - 2)))
       else optional.nothing;
 
   /* split :: regex -> string -> [string | [nullable string]]
@@ -175,7 +175,7 @@ rec {
         let
           replaceGroup = group:
             if builtins.isList group
-              then list.index captures (builtins.fromJSON (list.head group))
+              then builtins.elemAt captures (builtins.fromJSON (builtins.head group))
               else group;
         in string.concatMap replaceGroup subs;
     in substituteWith (capture regex) replaceCaptures;
