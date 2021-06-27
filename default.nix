@@ -1,4 +1,6 @@
 rec {
+  adt = import ./adt.nix;
+
   applicative = import ./applicative.nix;
 
   bool = import ./bool.nix;
