@@ -230,8 +230,10 @@ rec {
                   else if builtins.isFunction matches then
                     matches
                   else
-                    builtins.throw "std.adt: expected function or attrset for matcher on ${string.escapeNixString name}";
-              in (only apply) matcher val
+                    builtins.throw "std.adt: invalid matcher for ${string.escapeNixString name}";
+              in if only constructors == null
+                then matches
+                else (only apply) matcher val
           else
             val: matches:
               if builtins.isAttrs matches then
