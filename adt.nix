@@ -21,7 +21,7 @@ rec {
        > p = point.ctors.make 1 2
        > p
        { _type = "point"; x = 1; y = 2; }
-       > point.match p (x: y: x + y)
+       > point.match p { make = x: y: x + y; }
        3
     */
     positional = fields:
@@ -54,7 +54,7 @@ rec {
        > p = point.ctors.make { x = 1; y = 2; }
        > p
        { _type = "point"; x = 1; y = 2; }
-       > point.match p ({ x, y }: x + y)
+       > point.match p { make = { x, y }: x + y; }
        3
     */
     record = fields:
@@ -95,7 +95,7 @@ rec {
        > p = point.ctors.make 1 2
        > p
        { _type = "point"; _0 = 1; _1 = 2; }
-       > point.match p (x: y: x + y)
+       > point.match p { make x: y: x + y; }
        3
     */
     anon = types:
