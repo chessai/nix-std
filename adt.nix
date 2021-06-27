@@ -133,21 +133,21 @@ rec {
      Examples:
 
      > adt.new "optional" {
-         just = adt.fields.positional [ "value" ];
+         just = adt.fields.positional_ [ "value" ];
          nothing = adt.fields.none;
        }
 
      > adt.new "result" {
-         ok = adt.fields.anon 1;
-         err = adt.fields.anon 1;
+         ok = adt.fields.anon_ 1;
+         err = adt.fields.anon_ 1;
        }
 
      > adt.new "pair" {
-         make = adt.fields.anon 2;
+         make = adt.fields.anon_ 2;
        }
 
      > adt.new "point" {
-         make = adt.fields.record [ "x" "y" ];
+         make = adt.fields.record_ [ "x" "y" ];
        }
   */
   new = name: constructors:
