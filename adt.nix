@@ -2,6 +2,7 @@ let
   list = import ./list.nix;
   set = import ./set.nix;
   string = import ./string.nix;
+  types = import ./types.nix;
 
   unique = xs:
     let
@@ -10,13 +11,13 @@ let
 in
 rec {
   fields = rec {
-    /* positional :: [string] -> ConstructorSpecification
+    /* positional :: [{ name: string, type: type }] -> ConstructorSpecification
 
        Specifies that the variant should contain the provided field names, but
        the constructor and match function both expect appropriate positional
        arguments. The field names are only used in the internal representation.
 
-       > point = adt.struct "point" (adt.fields.positional ["x" "y"])
+       > point = adt.struct "point" (adt.fields.positional [{ name = "x"; type = types.float; } { name = "y"; type = types.float; }])
        > p = point.ctors.make 1 2
        > p
        { _type = "point"; x = 1; y = 2; }
@@ -24,17 +25,32 @@ rec {
        3
     */
     positional = fields:
-      assert builtins.isList fields && builtins.all builtins.isString fields;
-      assert unique fields;
+      assert builtins.isList fields
+      && builtins.all
+        (f:
+          builtins.isAttrs f
+          && f ? name && builtins.isString f.name
+          && f ? type
+        )
+        fields;
       fields;
 
-    /* record :: [string] -> ConstructorSpecification
+    /* positional_ :: [string] -> ConstructorSpecification
+
+       Like `fields.positional`, but the fields are untyped.
+    */
+    positional_ = fields:
+      assert builtins.isList fields && builtins.all builtins.isString fields;
+      assert unique fields;
+      positional (list.map (f: { name = f; type = types.any; }) fields);
+
+    /* record :: { string: type } -> ConstructorSpecification
 
        Specifies that the variant should contain the provided field names, but
        the constructor and match function both expect a single attrset argument
        with the appropriate fields.
 
-       > point = adt.struct "point" (adt.fields.record ["x" "y"])
+       > point = adt.struct "point" (adt.fields.record { x = types.float; y = types.float; })
        > p = point.ctors.make { x = 1; y = 2; }
        > p
        { _type = "point"; x = 1; y = 2; }
@@ -42,9 +58,17 @@ rec {
        3
     */
     record = fields:
+      assert builtins.isAttrs fields;
+      fields;
+
+    /* record_ :: [string] -> ConstructorSpecification
+
+       Like `fields.record`, but the fields are untyped.
+    */
+    record_ = fields:
       assert builtins.isList fields && builtins.all builtins.isString fields;
       assert unique fields;
-      list.fold set.monoid (list.map (x: { ${x} = null; }) fields);
+      list.fold set.monoid (list.map (x: { ${x} = types.any; }) fields);
 
     /* none :: ConstructorSpecification
 
@@ -52,7 +76,7 @@ rec {
        not be a function, but a singleton attrset. The corresponding match
        branch will expect a value, not a function, when matching.
 
-       > optional = adt.enum "optional" { just = adt.fields.positional ["value"]; nothing = adt.fields.none; }
+       > optional = adt.enum "optional" { just = adt.fields.positional_ ["value"]; nothing = adt.fields.none; }
        > optional.ctors.just 5
        { _tag = "just"; _type = "optional"; value = 5; }
        > optional.ctors.nothing
@@ -62,21 +86,29 @@ rec {
     */
     none = null;
 
-    /* anon :: int -> ConstructorSpecification
+    /* anon :: [type] -> ConstructorSpecification
 
        Like `fields.positional`, but instead of providing the names for the
        fields, the given number of anonymous field names are used instead.
 
-       > point = adt.struct "point" (adt.fields.anon 2)
+       > point = adt.struct "point" (adt.fields.anon [types.float types.float])
        > p = point.ctors.make 1 2
        > p
        { _type = "point"; _0 = 1; _1 = 2; }
        > point.match p (x: y: x + y)
        3
     */
-    anon = x:
+    anon = types:
+      assert builtins.isList types;
+      positional (list.imap (i: t: { name = "_${builtins.toString i}"; type = t; }) types);
+
+    /* anon_ :: int -> ConstructorSpecification
+
+       Like `fields.anon`, but the fields are untyped.
+    */
+    anon_ = x:
       assert builtins.isInt x && x > 0;
-      positional (list.map (n: "_${builtins.toString n}") (list.range 0 (x - 1)));
+      positional_ (list.map (n: "_${builtins.toString n}") (list.range 0 (x - 1)));
   };
 
   /* struct :: string -> ConstructorSpecification -> ADT
@@ -125,13 +157,24 @@ rec {
       (spec:
         builtins.any (x: x) [
           (spec == null)
-          (builtins.isList spec && builtins.all builtins.isString spec)
-          (builtins.isAttrs spec && builtins.all (x: x == null) (builtins.attrValues spec))
+          (
+            builtins.isList spec
+            &&
+            builtins.all
+              (f:
+                builtins.isAttrs f
+                && f ? name && builtins.isString f.name
+                && f ? type
+              )
+              spec
+          )
+          (builtins.isAttrs spec)
         ]
       )
       (builtins.attrValues constructors);
     assert builtins.all (name: !builtins.elem name [ "_tag" "_type" ]) (builtins.attrNames constructors);
     let
+      only = as: as.${builtins.head (builtins.attrNames as)};
       needsTag = builtins.length (builtins.attrNames constructors) > 1;
       genNaryCtor = base: args:
         let
@@ -142,7 +185,7 @@ rec {
             else
               let
                 field = builtins.elemAt args i;
-              in x: go (acc // { ${field} = x; }) (i + 1);
+              in x: go (acc // { ${field.name} = x; }) (i + 1);
         in go base 0;
       applyList = f: xs: list.foldl' (f': x: f' x) f xs;
       makeCtor = ctorName: spec:
@@ -160,7 +203,8 @@ rec {
             # TODO: could just intersectAttrs here, but wouldn't get checking that
             # all keys are present
             args: list.foldl' (x: y: x // { ${y} = args.${y}; }) baseAttrs (builtins.attrNames spec)
-          else builtins.throw "std.adt.new: invalid constructor specification for constructor ${string.escapeNixString ctorName}";
+          else
+            builtins.throw "std.adt.new: invalid constructor specification for constructor ${string.escapeNixString ctorName}";
       ctors = set.map makeCtor constructors;
       match =
         let
@@ -169,12 +213,11 @@ rec {
               # nullary
               (f: _: f)
             else if builtins.isList spec then
-              (f: v: applyList f (list.map (k: v.${k}) spec))
+              (f: v: applyList f (list.map (k: v.${k.name}) spec))
             else # attrs
               (f: v: f (set.map (k: _: v.${k}) spec))
             ;
           apply = set.map makeApply constructors;
-          only = as: as.${builtins.head (builtins.attrNames as)};
         in
           if builtins.length (builtins.attrNames constructors) == 0 then
             builtins.throw "std.adt: match on empty ADT: ${string.escapeNixString name}"
@@ -195,5 +238,29 @@ rec {
                 apply.${val._tag} matches.${val._tag} val
               else
                 builtins.throw "std.adt: expected attrset for matcher on ${string.escapeNixString name}";
-    in { inherit match ctors; };
+      check =
+        let
+          makeCtorCheck = ctorName: spec:
+            if spec == null then
+              _: true
+            else if builtins.isList spec then
+              t: builtins.all ({ name, type }: builtins.hasAttr name t && type.check t.${name}) spec
+            else if builtins.isAttrs spec then
+              t: builtins.all (name: builtins.hasAttr name t && spec.${name}.check t.${name}) (builtins.attrNames spec)
+            else
+              builtins.throw "std.adt.new: invalid constructor specification for constructor ${string.escapeNixString ctorName}"
+            ;
+          ctorChecks = set.map makeCtorCheck constructors;
+        in t:
+          (t ? _type && t._type == name)
+          &&
+          (
+            if needsTag then
+              t ? _tag
+              && builtins.elem t._tag (builtins.attrNames constructors)
+              && ctorChecks.${t._tag} t
+            else
+              (only ctorChecks) t
+          );
+    in { inherit match check ctors; };
 }
