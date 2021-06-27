@@ -17,7 +17,7 @@ rec {
        the constructor and match function both expect appropriate positional
        arguments. The field names are only used in the internal representation.
 
-       > point = adt.struct "point" (adt.fields.positional [{ name = "x"; type = types.float; } { name = "y"; type = types.float; }])
+       > point = adt.struct "point" (adt.fields.positional [{ name = "x"; type = types.int; } { name = "y"; type = types.int; }])
        > p = point.ctors.make 1 2
        > p
        { _type = "point"; x = 1; y = 2; }
@@ -50,7 +50,7 @@ rec {
        the constructor and match function both expect a single attrset argument
        with the appropriate fields.
 
-       > point = adt.struct "point" (adt.fields.record { x = types.float; y = types.float; })
+       > point = adt.struct "point" (adt.fields.record { x = types.int; y = types.int; })
        > p = point.ctors.make { x = 1; y = 2; }
        > p
        { _type = "point"; x = 1; y = 2; }
@@ -91,7 +91,7 @@ rec {
        Like `fields.positional`, but instead of providing the names for the
        fields, the given number of anonymous field names are used instead.
 
-       > point = adt.struct "point" (adt.fields.anon [types.float types.float])
+       > point = adt.struct "point" (adt.fields.anon [types.int types.int])
        > p = point.ctors.make 1 2
        > p
        { _type = "point"; _0 = 1; _1 = 2; }
