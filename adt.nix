@@ -226,7 +226,7 @@ rec {
               let
                 matcher =
                   if builtins.isAttrs matches then
-                    only matches val
+                    only matches
                   else if builtins.isFunction matches then
                     matches
                   else
