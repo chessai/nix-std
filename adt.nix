@@ -117,13 +117,22 @@ rec {
   */
   struct = name: constructor: new name { make = constructor; };
 
-  /* enum :: string -> { string: ConstructorSpecification } -> ADT
+  /* enum :: string -> { string: ConstructorSpecification } | [ string ] -> ADT
 
-     Create a new algebraic data type consisting of a sum type with the
-     constructors provided. This is simply an alias for 'new' to communicate
-     intention when a sum type is being created.
+     Create a new algebraic data type, with the provided constructors acting as
+     variants of the sum type. The constructor specification, if an attribute
+     set, has the same format as 'adt.new'. If the constructor specification is
+     a list of strings, each constructor will be assumed to be unary; that is,
+     each will be specified to 'adt.fields.none'.
   */
-  enum = new;
+  enum = name: ctors:
+    if builtins.isList ctors then
+      assert builtins.all builtins.isString ctors;
+      let
+        toUnary = ctorName: { "${ctorName}" = fields.none; };
+      in new name (list.fold set.monoid (list.map toUnary ctors))
+    else
+      new name ctors;
 
   /* new :: string -> { string: ConstructorSpecification } -> ADT
 
