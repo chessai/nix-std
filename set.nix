@@ -37,6 +37,10 @@ rec {
   */
   keys = builtins.attrNames;
 
+  /* values :: set -> [value]
+  */
+  values = builtins.attrValues;
+
   /* map :: (key -> value -> value) -> set -> set
   */
   map = builtins.mapAttrs;
