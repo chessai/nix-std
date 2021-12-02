@@ -1,7 +1,12 @@
 with rec {
+  bool = import ./bool.nix;
   function = import ./function.nix;
   inherit (function) id flip compose;
   list = import ./list.nix;
+
+  imports = {
+    optional = import ./optional.nix;
+  };
 };
 
 rec {
@@ -22,8 +27,66 @@ rec {
   assign = k: v: r: r // { "${k}" = v; };
 
   /* getAll :: key -> [set] -> [value]
+
+     > set.getAll "foo" [ { foo = "bar"; } { foo = "foo"; } ]
+     [ "bar" "foo" ]
   */
   getAll = builtins.catAttrs;
+
+  /* get :: key -> set -> optional value
+
+     > set.get "foo" { foo = "bar"; }
+     { _tag = "just"; value = "bar"; }
+     > set.get "foo" { }
+     { _tag = "nothing"; }
+  */
+  get = k: s: bool.toOptional (s ? "${k}") (unsafeGet k s);
+
+  /* getOr :: default -> key -> set -> value
+
+     > set.getOr "foobar" "foo" { foo = "bar"; }
+     "bar"
+     > set.getOr "foobar" "foo" { }
+     "foobar"
+  */
+  getOr = default: k: s: s."${k}" or default;
+
+  /* unsafeGet :: key -> set -> value
+
+     > set.unsafeGet "foo" { foo = "bar"; }
+     "bar"
+  */
+  unsafeGet = k: s: s."${k}";
+
+  /* at :: [key] -> set -> optional value
+
+     > set.at [ "foo" "bar" ] { foo.bar = "foobar"; }
+     { _tag = "just"; value = "foobar"; }
+     > set.at [ "foo" "foo" ] { foo.bar = "foobar"; }
+     { _tag = "nothing"; }
+  */
+  at = path: s: list.foldl' (s: k:
+    imports.optional.monad.bind s (get k)
+  ) (imports.optional.just s) path;
+
+  /* atOr :: default -> [key] -> set -> value
+
+     > set.atOr "123" [ "foo" "bar" ] { foo.bar = "foobar"; }
+     "foobar"
+     > set.atOr "123" [ "foo" "foo" ] { foo.bar = "foobar"; }
+     "123"
+  */
+  atOr = default: path: s: imports.optional.match (at path s) {
+    nothing = default;
+    just = id;
+  };
+
+  /* unsafeAt :: [key] -> set -> value
+
+     > set.unsafeAt [ "foo" "bar" ] { foo.bar = "foobar"; }
+     "foobar"
+  */
+  unsafeAt = path: s: list.foldl' (flip unsafeGet) s path;
 
   /* optional :: bool -> set -> set
 
