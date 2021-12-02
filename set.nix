@@ -77,6 +77,14 @@ rec {
     value = s.${name};
   in list.optional (f name value) { inherit name value; }) (keys s));
 
+  /* without :: [key] -> set -> set
+  */
+  without = flip builtins.removeAttrs;
+
+  /* retain :: [key] -> set -> set
+  */
+  retain = keys: builtins.intersectAttrs (gen keys id);
+
   /* traverse :: Applicative f => (value -> f b) -> set -> f set
   */
   traverse = ap: f:
