@@ -1,3 +1,7 @@
+with {
+  set = import ./set.nix;
+};
+
 rec {
   /* id :: a -> a
   */
@@ -23,4 +27,29 @@ rec {
      false
   */
   not = f: a: ! f a;
+
+  /* args :: (a -> b) -> set
+  */
+  args = f:
+    if f ? __functor then f.__functionArgs or (args (f.__functor f))
+    else builtins.functionArgs f;
+
+  /* setArgs :: set -> (a -> b) -> (a -> b)
+  */
+  setArgs = args: f: set.assign "__functionArgs" args (toSet f);
+
+  /* copyArgs :: (a -> b) -> (c -> b) -> (c -> b)
+  */
+  copyArgs = src: dst: setArgs (args src) dst;
+
+  /* toSet :: (a -> b) -> set
+
+     Convert a lambda into a callable set, unless `f` already is one.
+
+     > function.toSet function.id // { foo = "bar"; }
+     { __functor = «lambda»; foo = "bar"; }
+  */
+  toSet = f: if builtins.isFunction f then {
+    __functor = self: f;
+  } else f;
 }
