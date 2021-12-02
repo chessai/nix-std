@@ -62,4 +62,8 @@ rec {
   /* toList :: set -> [(key, value)]
   */
   toList = s: list.map (k: { _0 = k; _1 = s.${k}; }) (keys s);
+
+  /* fromList :: [(key, value)] -> set
+  */
+  fromList = xs: builtins.listToAttrs (list.map ({ _0, _1 }: { name = _0; value = _1; }) xs);
 }

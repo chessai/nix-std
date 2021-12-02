@@ -16,4 +16,5 @@ in section "std.set" {
     { _0 = "b"; _1 = 1; }
     { _0 = "c"; _1 = 2; }
   ] (set.toList testSet);
+  fromList = assertEqual testSet (set.fromList (set.toList testSet));
 }
