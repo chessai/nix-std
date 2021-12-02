@@ -92,4 +92,9 @@ section "std.optional" {
     (assertEqual false (optional.isNothing (optional.just null)))
     (assertEqual true (optional.isNothing optional.nothing))
   ];
+
+  toNullable = string.unlines [
+    (assertEqual 1 (optional.toNullable (optional.just 1)))
+    (assertEqual null (optional.toNullable optional.nothing))
+  ];
 }

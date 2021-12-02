@@ -94,7 +94,7 @@ rec {
 
   /* toNullable :: optional a -> nullable a
   */
-  toNullable = x: x.value;
+  toNullable = x: x.value or null;
 
   /* optional a -> bool
   */
