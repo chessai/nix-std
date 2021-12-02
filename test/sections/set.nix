@@ -7,6 +7,10 @@ let
   testSet = { a = 0; b = 1; c = 2; };
 in section "std.set" {
   empty = assertEqual set.empty {};
+  optional = string.unlines [
+    (assertEqual set.empty (set.optional false testSet))
+    (assertEqual testSet (set.optional true testSet))
+  ];
   keys = assertEqual ["a" "b" "c"] (set.keys testSet);
   values = assertEqual [0 1 2] (set.values testSet);
   map = assertEqual { a = 1; b = 2; c = 3; } (set.map (_: num.add 1) testSet);
