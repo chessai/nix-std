@@ -43,7 +43,9 @@ rec {
 
   /* filter :: (key -> value -> bool) -> set -> set
   */
-  filter = builtins.filterAttrs;
+  filter = f: s: builtins.listToAttrs (list.concatMap (name: let
+    value = s.${name};
+  in list.optional (f name value) { inherit name value; }) (keys s));
 
   /* traverse :: Applicative f => (value -> f
   */
