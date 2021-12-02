@@ -1,5 +1,6 @@
 with {
   set = import ./set.nix;
+  types = import ./types.nix;
 };
 
 rec {
@@ -49,7 +50,7 @@ rec {
      > function.toSet function.id // { foo = "bar"; }
      { __functor = «lambda»; foo = "bar"; }
   */
-  toSet = f: if builtins.isFunction f then {
+  toSet = f: if types.lambda.check f then {
     __functor = self: f;
   } else f;
 }

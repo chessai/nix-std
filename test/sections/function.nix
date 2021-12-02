@@ -15,9 +15,17 @@ in section "std.function" {
     (assertEqual 2 (testFn testArgs))
     (assertEqual 2 (testFnSet testArgs))
   ];
-  isLambda = string.unlines [
-    (assertEqual true (builtins.isFunction testFn))
-    (assertEqual false (builtins.isFunction testFnSet))
+  check = string.unlines [
+    (assertEqual true (types.function.check testFn))
+    (assertEqual true (types.lambda.check testFn))
+    (assertEqual false (types.functionSet.check testFn))
+    (assertEqual true (types.function.check testFnSet))
+    (assertEqual true (types.functionSet.check testFnSet))
+    (assertEqual false (types.lambda.check testFnSet))
+  ];
+  show = string.unlines [
+    (assertEqual "«lambda»" (types.function.show function.id))
+    (assertEqual "{ a, b, c ? «code» }: «code»" (types.function.show testFn))
   ];
   args = string.unlines [
     (assertEqual { a = false; b = false; c = true; } (function.args testFn))
@@ -30,5 +38,6 @@ in section "std.function" {
     (assertEqual true ((function.toSet testFnSet) ? foo))
     (assertEqual 2 (function.toSet testFn testArgs))
     (assertEqual 2 (function.toSet testFnSet testArgs))
+    (assertEqual true (types.functionSet.check (function.toSet testFn)))
   ];
 }
