@@ -66,4 +66,8 @@ rec {
   /* fromList :: [(key, value)] -> set
   */
   fromList = xs: builtins.listToAttrs (list.map ({ _0, _1 }: { name = _0; value = _1; }) xs);
+
+  /* gen :: [key] -> (key -> value) -> set
+  */
+  gen = keys: f: fromList (list.map (n: { _0 = n; _1 = f n; }) keys);
 }
