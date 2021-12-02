@@ -18,4 +18,8 @@ section "std.bool" {
     (assertEqual (optional.just 0) (bool.toOptional true 0))
     (assertEqual optional.nothing (bool.toOptional false 0))
   ];
+  toNullable = string.unlines [
+    (assertEqual 0 (bool.toNullable true 0))
+    (assertEqual null (bool.toNullable false 0))
+  ];
 }
