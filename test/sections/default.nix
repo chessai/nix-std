@@ -8,5 +8,7 @@
   optional = import ./optional.nix;
   regex = import ./regex.nix;
   serde = import ./serde.nix;
+  set = import ./set.nix;
   string = import ./string.nix;
+  tuple = import ./tuple.nix;
 }

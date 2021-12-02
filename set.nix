@@ -2,6 +2,7 @@ with rec {
   function = import ./function.nix;
   inherit (function) id;
   list = import ./list.nix;
+  tuple = import ./tuple.nix;
 };
 
 rec {
@@ -56,4 +57,8 @@ rec {
   /* toList :: set -> [(key, value)]
   */
   toList = s: list.map (k: { _0 = k; _1 = s.${k}; }) (keys s);
+
+  /* fromList :: [(key, value)] -> set
+  */
+  fromList = xs: builtins.listToAttrs (list.map tuple.toPair xs);
 }
