@@ -10,6 +10,7 @@ let
     set = import ./set.nix;
     string = import ./string.nix;
   };
+  _null = null;
 
   /* unsafe show functions */
   showBool = x:
@@ -133,7 +134,7 @@ rec {
   stringMatching = pattern: mkType {
     name = "stringMatching ${imports.string.escapeNixString pattern}";
     description = "string matching the pattern ${pattern}";
-    check = x: string.check x && builtins.match pattern x != null;
+    check = x: string.check x && builtins.match pattern x != _null;
   };
 
   attrs = mkType {
@@ -166,11 +167,13 @@ rec {
          description = "non-empty " + base.description;
        };
 
-  nullOr = type: mkType {
-    name = "nullOr";
-    description = "null or ${type.description}";
-    check = x: x == null || type.check x;
+  null = mkType {
+    name = "null";
+    description = "null";
+    check = x: x == _null;
   };
+
+  nullOr = type: either null type;
 
   enum = values:
     let showType = v:
