@@ -145,7 +145,7 @@ rec {
   drv = mkType {
     name = "derivation";
     description = "derivation";
-    check = builtins.isDerivation;
+    check = x: builtins.isAttrs x && x.type or null == "derivation";
   };
 
   path = mkType {
