@@ -37,13 +37,19 @@ rec {
   */
   keys = builtins.attrNames;
 
+  /* values :: set -> [value]
+  */
+  values = builtins.attrValues;
+
   /* map :: (key -> value -> value) -> set -> set
   */
   map = builtins.mapAttrs;
 
   /* filter :: (key -> value -> bool) -> set -> set
   */
-  filter = builtins.filterAttrs;
+  filter = f: s: builtins.listToAttrs (list.concatMap (name: let
+    value = s.${name};
+  in list.optional (f name value) { inherit name value; }) (keys s));
 
   /* traverse :: Applicative f => (value -> f
   */
@@ -56,4 +62,8 @@ rec {
   /* toList :: set -> [(key, value)]
   */
   toList = s: list.map (k: { _0 = k; _1 = s.${k}; }) (keys s);
+
+  /* fromList :: [(key, value)] -> set
+  */
+  fromList = xs: builtins.listToAttrs (list.map ({ _0, _1 }: { name = _0; value = _1; }) xs);
 }
