@@ -3,6 +3,7 @@ with rec {
   function = import ./function.nix;
   inherit (function) id flip compose;
   list = import ./list.nix;
+  nonempty = import ./nonempty.nix;
 
   imports = {
     optional = import ./optional.nix;
@@ -23,8 +24,23 @@ rec {
   empty = {};
 
   /* assign :: key -> value -> set -> set
+
+     > set.assign "foo" "bar" { }
+     { foo = "bar"; }
   */
   assign = k: v: r: r // { "${k}" = v; };
+
+  /* assignAt :: [key] -> value -> set -> set
+
+     > set.assignAt [ "foo" "bar" ] "foobar" { }
+     { foo.bar = "foobar"; }
+  */
+  assignAt = let
+    next = k: v: r: tail: assignAt tail v (getOr { } k r);
+  in path: v: r: imports.optional.match (nonempty.fromList path) {
+    just = { head, tail }: assign head (next head v r tail) r;
+    nothing = v;
+  };
 
   /* getAll :: key -> [set] -> [value]
 
