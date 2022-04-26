@@ -18,7 +18,7 @@ rec {
       else f x;
   };
 
-  applicative = functor // {
+  applicative = functor // rec {
     /* pure :: a -> Nullable a
     */
     pure = id;
