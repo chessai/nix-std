@@ -25,6 +25,18 @@ rec {
   */
   getAll = builtins.catAttrs;
 
+  /* optional :: bool -> set -> set
+
+     Optionally keep a set. If the condition is true, return the set
+     unchanged, otherwise return an empty set.
+
+     > set.optional true { foo = "bar"; }
+     { foo = "bar"; }
+     > set.optional false { foo = "bar"; }
+     { }
+  */
+  optional = b: s: if b then s else empty;
+
   match = o: { empty, assign }:
     if o == {}
     then empty
