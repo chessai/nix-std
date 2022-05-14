@@ -21,6 +21,10 @@ rec {
   */
   assign = k: v: r: r // { "${k}" = v; };
 
+  /* getAll :: key -> [set] -> [value]
+  */
+  getAll = builtins.catAttrs;
+
   match = o: { empty, assign }:
     if o == {}
     then empty
@@ -44,6 +48,16 @@ rec {
   /* map :: (key -> value -> value) -> set -> set
   */
   map = builtins.mapAttrs;
+
+  /* mapZip :: (key -> [value] -> value) -> [set] -> set
+  */
+  mapZip = let
+    zipAttrsWithNames = names: f: sets: fromList (list.map (name: {
+      _0 = name;
+      _1 = f name (getAll name sets);
+    }) names);
+    zipAttrsWith = f: sets: zipAttrsWithNames (list.concatMap keys sets) f sets;
+  in builtins.zipAttrsWith or zipAttrsWith;
 
   /* filter :: (key -> value -> bool) -> set -> set
   */
