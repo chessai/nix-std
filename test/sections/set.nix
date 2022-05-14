@@ -12,6 +12,7 @@ in section "std.set" {
   map = assertEqual { a = 1; b = 2; c = 3; } (set.map (_: num.add 1) testSet);
   zip = assertEqual { a = [0 1]; b = [1]; c = [2]; } (set.mapZip (_: function.id) [testSet { a = 1; }]);
   filter = assertEqual { b = 1; } (set.filter (k: v: v == 1) testSet);
+  traverse = assertEqual testSet (set.traverse nullable.applicative (x: if (num.even x || num.odd x) then x else null) testSet);
   toList = assertEqual [
     { _0 = "a"; _1 = 0; }
     { _0 = "b"; _1 = 1; }

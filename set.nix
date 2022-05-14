@@ -1,6 +1,6 @@
 with rec {
   function = import ./function.nix;
-  inherit (function) id;
+  inherit (function) id flip;
   list = import ./list.nix;
 };
 
@@ -65,7 +65,7 @@ rec {
     value = s.${name};
   in list.optional (f name value) { inherit name value; }) (keys s));
 
-  /* traverse :: Applicative f => (value -> f
+  /* traverse :: Applicative f => (value -> f b) -> set -> f set
   */
   traverse = ap: f:
     (flip match) {
