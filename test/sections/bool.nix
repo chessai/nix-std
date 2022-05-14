@@ -14,4 +14,12 @@ section "std.bool" {
     (assertEqual (ifThenElse true "left" "right") "left")
     (assertEqual (ifThenElse false "left" "right") "right")
   ];
+  toOptional = string.unlines [
+    (assertEqual (optional.just 0) (bool.toOptional true 0))
+    (assertEqual optional.nothing (bool.toOptional false 0))
+  ];
+  toNullable = string.unlines [
+    (assertEqual 0 (bool.toNullable true 0))
+    (assertEqual null (bool.toNullable false 0))
+  ];
 }
