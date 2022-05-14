@@ -60,6 +60,7 @@ let
     in addCheck baseType (x: x >= lo && x <= hi) // {
          name = "intBetween";
          description = "an integer in [${builtins.toString lo}, ${builtins.toString hi}]";
+         show = showInt;
        };
 
   unsigned = bit: lo: hi:
@@ -164,7 +165,9 @@ rec {
   nonEmptyListOf = type:
     let base = addCheck (listOf type) (x: x != []);
     in base // {
+         name = "nonempty ${base.name}";
          description = "non-empty " + base.description;
+         show = showList;
        };
 
   null = mkType {
