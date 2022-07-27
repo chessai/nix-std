@@ -95,11 +95,27 @@ section "std.list" {
     (assertEqual false (list.empty [null]))
   ];
 
-  head = assertEqual 10 (list.head [10 20 30]);
-  tail = assertEqual [20 30] (list.tail [10 20 30]);
-  init = assertEqual [10 20] (list.init [10 20 30]);
+  unsafeHead = assertEqual 10 (list.unsafeHead [10 20 30]);
+  unsafeTail = assertEqual [20 30] (list.unsafeTail [10 20 30]);
+  unsafeInit = assertEqual [10 20] (list.unsafeInit [10 20 30]);
+  unsafeLast = assertEqual 30 (list.unsafeLast [10 20 30]);
 
-  last = assertEqual 30 (list.last [10 20 30]);
+  head = string.unlines [
+    (assertEqual (optional.just 10) (list.head [10 20 30]))
+    (assertEqual optional.nothing (list.head []))
+  ];
+  tail = string.unlines [
+    (assertEqual (optional.just [20 30]) (list.tail [10 20 30]))
+    (assertEqual optional.nothing (list.tail []))
+  ];
+  init = string.unlines [
+    (assertEqual (optional.just [10 20]) (list.init [10 20 30]))
+    (assertEqual optional.nothing (list.init []))
+  ];
+  last = string.unlines [
+    (assertEqual (optional.just 30) (list.last [10 20 30]))
+    (assertEqual optional.nothing (list.last []))
+  ];
 
   take = let xs = list.range 1 20; in string.unlines [
     (assertEqual [1 2 3 4] (list.take 4 xs))
@@ -142,8 +158,12 @@ section "std.list" {
     (assertEqual [ 1 2 3 20 ] (list.insertAt 3 20 [ 1 2 3 ]))
   ];
   ifor = assertEqual ["foo-0" "bar-1"] (list.ifor ["foo" "bar"] (i: s: s + "-" + builtins.toString i));
-  elemAt = assertEqual "barry" (list.elemAt ["bar" "ry" "barry"] 2);
-  index = assertEqual "barry" (list.index ["bar" "ry" "barry"] 2);
+  unsafeIndex = assertEqual "barry" (list.unsafeIndex ["bar" "ry" "barry"] 2);
+  index = string.unlines [
+    (assertEqual (optional.just "barry") (list.index ["bar" "ry" "barry"] 2))
+    (assertEqual optional.nothing (list.index ["bar" "ry" "barry"] (-1)))
+    (assertEqual optional.nothing (list.index ["bar" "ry" "barry"] 3))
+  ];
   concat = assertEqual ["foo" "bar" "baz" "quux"] (list.concat [["foo"] ["bar"] ["baz" "quux"]]);
   filter = assertEqual ["foo" "fun" "friends"] (list.filter (string.hasPrefix "f") ["foo" "oof" "fun" "nuf" "friends" "sdneirf"]);
   elem = assertEqual builtins.true (list.elem "friend" ["texas" "friend" "amigo"]);

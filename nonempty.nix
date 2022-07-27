@@ -92,7 +92,7 @@ rec {
   unsafeFromList = xs:
     if builtins.length xs == 0
     then builtins.throw "std.nonempty.unsafeFromList: empty list"
-    else { head = list.head xs; tail = list.tail xs; };
+    else { head = builtins.head xs; tail = builtins.tail xs; };
 
   /* toList :: nonempty a -> [a]
 
@@ -127,7 +127,7 @@ rec {
   init = { head, tail }:
     if builtins.length tail == 0
     then []
-    else [head] ++ list.init tail;
+    else [head] ++ list.unsafeInit tail;
 
   /* last :: [a] -> a
 
@@ -136,7 +136,7 @@ rec {
   last = { head, tail }:
     if builtins.length tail == 0
     then head
-    else list.last tail;
+    else list.unsafeLast tail;
 
   /* slice :: int -> int -> [a] -> [a]
 
@@ -160,7 +160,7 @@ rec {
           let i' = i + offset;
           in if i' == 0
             then head
-            else list.index tail (i' - 1)
+            else builtins.elemAt tail (i' - 1)
         )
         len';
 
@@ -271,18 +271,19 @@ rec {
   ifor = flip imap;
 
   /* @partial
-     elemAt :: nonempty a -> int -> a
+     unsafeIndex :: nonempty a -> int -> a
 
-     Get the nth element of a list, indexed from 0.
+     Get the nth element of a list, indexed from 0. Fails if the index is out of
+     bounds of the list.
   */
-  elemAt = { head, tail }: n: if n == 0 then head else builtins.elemAt tail (n - 1);
+  unsafeIndex = { head, tail }: n: if n == 0 then head else builtins.elemAt tail (n - 1);
 
-  /* @partial
-     index :: nonempty a -> int -> a
+  /* index :: nonempty a -> int -> optional a
 
-     Get the nth element of a list, indexed from 0. An alias for 'elemAt'.
+     Get the nth element of a list, indexed from 0. Returns `optional.nothing`
+     if the index is out of bounds of the list.
   */
-  index = { head, tail }: n: if n == 0 then head else builtins.elemAt tail (n - 1);
+  index = { head, tail }: n: if n == 0 then optional.just head else list.index tail (n - 1);
 
   /* filter :: (a -> bool) -> nonempty a -> [a]
 
@@ -403,8 +404,8 @@ rec {
       tailLen = builtins.length tail;
       go = n:
         if n == tailLen - 1
-        then ap.map list.singleton (f (list.index tail n))
-        else ap.lift2 list.cons (f (list.index tail n)) (go (n + 1));
+        then ap.map list.singleton (f (builtins.elemAt tail n))
+        else ap.lift2 list.cons (f (builtins.elemAt tail n)) (go (n + 1));
     in if tailLen == 0
       then ap.map (x: make x []) (f head)
       else ap.lift2 make (f head) (go 0);
@@ -418,8 +419,8 @@ rec {
       tailLen = builtins.length tail;
       go = n:
         if n == tailLen - 1
-        then ap.map list.singleton (list.index tail n)
-        else ap.lift2 list.cons (list.index tail n) (go (n + 1));
+        then ap.map list.singleton (builtins.elemAt tail n)
+        else ap.lift2 list.cons (builtins.elemAt tail n) (go (n + 1));
     in if tailLen == 0
       then ap.map (x: make x []) (f head)
       else ap.lift2 make head (go 0);
@@ -451,12 +452,12 @@ rec {
     in if tailLen == 0
       then xs
       else {
-        head = list.last tail;
+        head = list.unsafeLast tail;
         tail = list.generate
           (i:
             if i == tailLen - 1
             then head
-            else list.index tail (tailLen - i - 2)
+            else builtins.elemAt tail (tailLen - i - 2)
           )
           tailLen;
       };

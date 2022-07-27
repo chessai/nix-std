@@ -141,8 +141,15 @@ section "std.nonempty" {
     (assertEqual (nonempty.make 20 [ 1 2 3 ]) (nonempty.insertAt 0 20 (nonempty.make 1 [ 2 3 ])))
     (assertEqual (nonempty.make 1 [ 2 3 20 ]) (nonempty.insertAt 3 20 (nonempty.make 1 [ 2 3 ])))
   ];
-  elemAt = assertEqual "barry" (nonempty.elemAt (nonempty.make "bar" ["ry" "barry"]) 2);
-  index = assertEqual "barry" (nonempty.index (nonempty.make "bar" ["ry" "barry"]) 2);
+  unsafeIndex = string.unlines [
+    (assertEqual "bar" (nonempty.unsafeIndex (nonempty.make "bar" ["ry" "barry"]) 0))
+    (assertEqual "barry" (nonempty.unsafeIndex (nonempty.make "bar" ["ry" "barry"]) 2))
+  ];
+  index = string.unlines [
+    (assertEqual (optional.just "bar") (nonempty.index (nonempty.make "bar" ["ry" "barry"]) 0))
+    (assertEqual (optional.just "barry") (nonempty.index (nonempty.make "bar" ["ry" "barry"]) 2))
+    (assertEqual optional.nothing (nonempty.index (nonempty.make "bar" ["ry" "barry"]) 3))
+  ];
   filter = assertEqual ["foo" "fun" "friends"] (nonempty.filter (string.hasPrefix "f") (nonempty.make "foo" ["oof" "fun" "nuf" "friends" "sdneirf"]));
   elem = assertEqual builtins.true (nonempty.elem "friend" (nonempty.make "texas" ["friend" "amigo"]));
   notElem = assertEqual builtins.true (nonempty.notElem "foo" (nonempty.make "texas" ["friend" "amigo"]));

@@ -46,9 +46,9 @@ rec {
   monadFix = monad // {
     /* fix :: (a -> [a]) -> [a]
     */
-    fix = f: match (fix (compose f head)) {
+    fix = f: match (fix (compose f unsafeHead)) {
       nil = nil;
-      cons = x: _: cons x (fix (compose tail f));
+      cons = x: _: cons x (fix (compose unsafeTail f));
     };
   };
 
@@ -95,46 +95,108 @@ rec {
   empty = xs: xs == [];
 
   /* @partial
-     head :: [a] -> a
+     unsafeHead :: [a] -> a
 
      Get the first element of a list. Fails if the list is empty.
 
-     > list.head [ 1 2 3 ]
+     > list.unsafeHead [ 1 2 3 ]
      1
   */
-  head = builtins.head;
+  unsafeHead = builtins.head;
+
+  /* head :: [a] -> optional a
+
+     Get the first element of a list. Returns `optional.nothing` if the list is
+     empty.
+
+     > list.head [ 1 2 3 ]
+     { _tag = "just"; value = 1; }
+     > list.head []
+     { _tag = "nothing"; }
+  */
+  head = xs:
+    if builtins.length xs > 0
+    then _optional.just (builtins.head xs)
+    else _optional.nothing;
 
   /* @partial
-     tail :: [a] -> [a]
+     unsafeTail :: [a] -> [a]
 
      Return the list minus the first element. Fails if the list is empty.
 
-     > list.tail [ 1 2 3 ]
+     > list.unsafeTail [ 1 2 3 ]
      [ 2 3 ]
   */
-  tail = builtins.tail;
+  unsafeTail = builtins.tail;
+
+  /* tail :: [a] -> optional [a]
+
+     Return the list minus the first element. Returns `optional.nothing` if the
+     list is empty.
+
+     > list.tail [ 1 2 3 ]
+     { _tag = "just "; value = [ 2 3 ]; }
+     > list.tail []
+     { _tag = "nothing"; }
+  */
+  tail = xs:
+    if builtins.length xs > 0
+    then _optional.just (builtins.tail xs)
+    else _optional.nothing;
 
   /* @partial
-     init :: [a] -> [a]
+     unsafeInit :: [a] -> [a]
 
      Return the list minus the last element. Fails if the list is empty.
 
-     > list.init [ 1 2 3 ]
+     > list.unsafeInit [ 1 2 3 ]
      [ 1 2 ]
   */
-  init = xs: slice 0 (length xs - 1) xs;
+  unsafeInit = xs:
+    if builtins.length xs > 0
+    then slice 0 (length xs - 1) xs
+    else builtins.throw "std.list.unsafeInit: empty list";
+
+  /* init :: [a] -> optional [a]
+
+     Return the list minus the last element. Returns `optional.nothing` if the
+     list is empty.
+
+     > list.init [ 1 2 3 ]
+     { _tag = "just"; value = [ 1 2 ]; }
+     > list.init []
+     { _tag = "nothing"; }
+  */
+  init = xs:
+    if builtins.length xs > 0
+    then _optional.just (slice 0 (length xs - 1) xs)
+    else _optional.nothing;
 
   /* @partial
-     last :: [a] -> a
+     unsafeLast :: [a] -> a
 
      Get the last element of a list. Fails if the list is empty.
 
-     > list.last [ 1 2 3 ]
+     > list.unsafeLast [ 1 2 3 ]
      3
   */
-  last = xs:
-    let len = length xs;
-    in index xs (len - 1);
+  unsafeLast = xs:
+    let len = builtins.length xs;
+    in if len > 0
+      then builtins.elemAt xs (len - 1)
+      else builtins.throw "std.list.unsafeLast: empty list";
+
+  /* last :: [a] -> optional a
+
+     Get the last element of a list. Returns `optional.nothing` if the list
+     is empty.
+
+     > list.last [ 1 2 3 ]
+     { _tag = "just"; value = 3; }
+     > list.last []
+     { _tag = "nothing"; }
+  */
+  last = xs: index xs (builtins.length xs - 1);
 
   /* take :: int -> [a] -> [a]
 
@@ -234,7 +296,7 @@ rec {
   */
   imap = f: xs:
     let len = length xs;
-    in generate (i: f i (index xs i)) len;
+    in generate (i: f i (builtins.elemAt xs i)) len;
 
   /* modifyAt :: int -> (a -> a) -> [a] -> [a]
 
@@ -276,9 +338,9 @@ rec {
           if j == i then
             x
           else if j < i then
-            index xs j
+            builtins.elemAt xs j
           else
-            index xs (j - 1)
+            builtins.elemAt xs (j - 1)
         )
         (len + 1);
 
@@ -292,24 +354,32 @@ rec {
   ifor = flip imap;
 
   /* @partial
-     elemAt :: [a] -> int -> a
+     unsafeIndex :: [a] -> int -> a
 
-     Get the nth element of a list, indexed from 0.
+     Get the nth element of a list, indexed from 0. Fails if the index is out of
+     bounds of the list.
 
-     > list.elemAt [ 1 2 3 ] 1
+     > list.unsafeIndex [ 1 2 3 ] 1
      2
   */
-  elemAt = builtins.elemAt;
+  unsafeIndex = builtins.elemAt;
 
-  /* @partial
-     index :: [a] -> int -> a
+  /* index :: [a] -> int -> a
 
-     Get the nth element of a list, indexed from 0. An alias for 'elemAt'.
+     Get the nth element of a list, indexed from 0. Returns `optional.nothing`
+     if the index is out of bounds of the list.
 
      > list.index [ 1 2 3 ] 1
-     2
+     { _tag = "just"; value = 2; }
+     > list.index [ 1 2 3 ] 4
+     { _tag = "nothing"; }
   */
-  index = builtins.elemAt;
+  index = xs: ix:
+    let
+      len = builtins.length xs;
+    in if ix < 0 || ix >= len
+      then _optional.nothing
+      else _optional.just (builtins.elemAt xs ix);
 
   /* concat :: [[a]] -> [a]
 
@@ -408,7 +478,7 @@ rec {
         go = n:
           if n == len
           then z0
-          else k (index xs n) (go (n + 1));
+          else k (builtins.elemAt xs n) (go (n + 1));
     in go 0;
 
   /* foldl' :: (b -> a -> b) -> b -> [a] -> b
@@ -565,7 +635,7 @@ rec {
       let
         remaining = max 0 (length xs - offset);
         len' = if len == null then remaining else min (max len 0) remaining;
-      in generate (i: index xs (i + offset)) len';
+      in generate (i: builtins.elemAt xs (i + offset)) len';
 
   /* range :: int -> int -> [int]
 
@@ -615,7 +685,7 @@ rec {
   */
   zipWith = f: xs0: ys0:
     let len = min (length xs0) (length ys0);
-    in generate (n: f (index xs0 n) (index ys0 n)) len;
+    in generate (n: f (builtins.elemAt xs0 n) (builtins.elemAt ys0 n)) len;
 
   /* zip :: [a] -> [b] -> [(a, b)]
 
@@ -636,7 +706,7 @@ rec {
   */
   reverse = xs:
     let len = length xs;
-    in generate (n: index xs (len - n - 1)) len;
+    in generate (n: builtins.elemAt xs (len - n - 1)) len;
 
   /* unfold :: (b -> optional (a, b)) -> b -> [a]
 
@@ -673,7 +743,7 @@ rec {
       go = i:
         if i >= len
         then { _tag = "nothing"; } #_optional.nothing
-        else if pred (index xs i)
+        else if pred (builtins.elemAt xs i)
              then { _tag = "just"; value = i; } #_optional.just i
              else go (i + 1);
     in go 0;
@@ -694,7 +764,7 @@ rec {
       go = i:
         if i < 0
         then _optional.nothing
-        else if pred (index xs i)
+        else if pred (builtins.elemAt xs i)
              then _optional.just i
              else go (i - 1);
     in go (len - 1);
@@ -712,7 +782,7 @@ rec {
   find = pred: xs:
     _optional.match (findIndex pred xs) {
       nothing = _optional.nothing;
-      just = i: _optional.just (index xs i);
+      just = i: _optional.just (builtins.elemAt xs i);
     };
 
   /* findLast :: (a -> bool) -> [a] -> optional a
@@ -728,7 +798,7 @@ rec {
   findLast = pred: xs:
     _optional.match (findLastIndex pred xs) {
       nothing = _optional.nothing;
-      just = i: _optional.just (index xs i);
+      just = i: _optional.just (builtins.elemAt xs i);
     };
 
   /* splitAt :: int -> [a] -> ([a], [a])
