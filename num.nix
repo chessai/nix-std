@@ -118,13 +118,13 @@ in rec {
      Integer exponentiation. Note that this only handles positive integer exponents.
   */
   pow = base0: exponent0:
-    let pow' = base: exponent: value:
+    let pow' = x: exponent: res:
         if exponent == 0
-          then 1
-        else if exponent <= 1
-          then value
-        else pow' base (exponent - 1) (value * base);
-    in if base0 == 0 || base0 == 1 then 1 else pow' base0 exponent0 base0;
+          then res
+        else if bits.test exponent 0
+          then pow' x (bits.clear exponent 0) (res * x)
+        else pow' (x * x) (bits.shiftRU exponent 1) res;
+    in if base0 == 0 || base0 == 1 then 1 else pow' base0 exponent0 1;
 
   pi = 3.141592653589793238;
 
