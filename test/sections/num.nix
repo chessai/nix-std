@@ -73,6 +73,12 @@ section "std.num" {
   pow = string.unlines [
     (assertEqual (num.pow 0 10) 1)
     (assertEqual (num.pow 1 10) 1)
+    (assertEqual (num.pow  2 (-1)) 0) # Fraction 1/2 gets floored
+    (assertEqual (num.pow  2 0) 1)
+    (assertEqual (num.pow  2 1) 2)
+    (assertEqual (num.pow  2 10) 1024)
+    (assertEqual (num.pow  2 (num.bits.bitSize - 1)) num.minInt) # Overflow
+    (assertEqual (num.pow 5 3) 125)
     (assertEqual (num.pow 10 0) 1)
     (assertEqual (num.pow 10 1) 10)
     (assertEqual (num.pow 10 3) 1000)
