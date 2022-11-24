@@ -6,6 +6,7 @@ with rec {
 let
   imports = {
     list = import ./list.nix;
+    nonempty = import ./nonempty.nix;
     num = import ./num.nix;
     set = import ./set.nix;
     string = import ./string.nix;
@@ -33,6 +34,8 @@ let
         body = imports.string.intercalate " " (imports.list.map showKey (imports.set.keys s));
     in "{ " + body + " }";
   showString = s: "\"" + s + "\"";
+  showNonEmpty = show: x:
+    "nonempty " + showList show (imports.nonempty.toList x);
   showInternal = x:
     let /* shows :: [{ isType :: a -> bool, showType :: a -> string }]*/
         shows = [
@@ -187,6 +190,23 @@ rec {
       name = "nonempty ${base.name}";
       description = "non-empty " + base.description;
     };
+
+  nonEmpty = mkType {
+    name = "nonempty";
+    description = "non-empty";
+    check = x: list.check x.tail or null && imports.set.keys x == [ "head" "tail" ];
+    show = showNonEmpty show;
+  };
+
+  nonEmptyOf = type: let
+    tail = listOf type;
+    check = x: type.check x.head && tail.check x.tail;
+    base = addCheck nonEmpty check;
+  in base // {
+    name = "${base.name} ${type.name}";
+    description = "${base.description} of ${type.description}s";
+    show = showNonEmpty type.show;
+  };
 
   null = mkType {
     name = "null";
