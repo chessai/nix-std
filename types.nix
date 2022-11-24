@@ -20,7 +20,10 @@ let
   showFloat = builtins.toString;
   showFunction = const "<<lambda>>";
   showInt = builtins.toString;
-  showList = ls: "[ " + imports.string.concatSep ", " (imports.list.map showInternal ls) + " ]";
+  showList = ls:
+    let body = imports.string.intercalate ", " (imports.list.map showInternal ls);
+        tokens = [ "[" ] ++ imports.list.optional (! imports.list.empty ls) body ++ [ "]" ];
+    in imports.string.intercalate " " tokens;
   showNull = const "null";
   showPath = builtins.toString;
   showSet = s:

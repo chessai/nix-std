@@ -4,6 +4,21 @@ with std;
 with (import ./../framework.nix);
 
 section "std.list" {
+  check = string.unlines [
+    (assertEqual true ((types.listOf types.int).check [ ]))
+    (assertEqual true ((types.listOf types.int).check [ 1 2 3 ]))
+    (assertEqual false ((types.listOf types.int).check [ 1 2 "foo" ]))
+  ];
+  checkNonEmpty = string.unlines [
+    (assertEqual true ((types.nonEmptyListOf types.int).check [ 1 2 3 ]))
+    (assertEqual false ((types.nonEmptyListOf types.int).check [ 1 2 "foo" ]))
+  ];
+
+  show = string.unlines [
+    (assertEqual "[ ]" (types.show [ ]))
+    (assertEqual "[ 1, 2, 3 ]" (types.show [ 1 2 3 ]))
+  ];
+
   laws = string.unlines [
     (functor list.functor {
       typeName = "list";
