@@ -1,6 +1,6 @@
 with rec {
   function = import ./function.nix;
-  inherit (function) const flip compose id;
+  inherit (function) const flip not compose id;
 
   num = import ./num.nix;
   inherit (num) min max;
@@ -386,7 +386,7 @@ rec {
 
      Check that none of the elements in a list match the given predicate.
   */
-  none = p: { head, tail }: (!p head) && builtins.all (x: !p x) tail;
+  none = p: { head, tail }: (!p head) && builtins.all (not p) tail;
 
   /* count :: (a -> bool) -> nonempty a -> int
 
