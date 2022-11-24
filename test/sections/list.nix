@@ -5,18 +5,23 @@ with (import ./../framework.nix);
 
 section "std.list" {
   check = string.unlines [
+    (assertEqual true (types.list.check [ ]))
+    (assertEqual false (types.list.check { }))
     (assertEqual true ((types.listOf types.int).check [ ]))
     (assertEqual true ((types.listOf types.int).check [ 1 2 3 ]))
     (assertEqual false ((types.listOf types.int).check [ 1 2 "foo" ]))
   ];
   checkNonEmpty = string.unlines [
+    (assertEqual true (types.nonEmptyList.check [ 1 2 3 ]))
+    (assertEqual false (types.nonEmptyList.check [ ]))
+    (assertEqual false (types.nonEmptyList.check { }))
     (assertEqual true ((types.nonEmptyListOf types.int).check [ 1 2 3 ]))
     (assertEqual false ((types.nonEmptyListOf types.int).check [ 1 2 "foo" ]))
   ];
 
   show = string.unlines [
-    (assertEqual "[ ]" (types.show [ ]))
-    (assertEqual "[ 1, 2, 3 ]" (types.show [ 1 2 3 ]))
+    (assertEqual "[ ]" (types.list.show [ ]))
+    (assertEqual "[ 1, 2, 3 ]" (types.list.show [ 1 2 3 ]))
   ];
 
   laws = string.unlines [

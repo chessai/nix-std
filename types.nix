@@ -20,8 +20,8 @@ let
   showFloat = builtins.toString;
   showFunction = const "<<lambda>>";
   showInt = builtins.toString;
-  showList = ls:
-    let body = imports.string.intercalate ", " (imports.list.map showInternal ls);
+  showList = show: ls:
+    let body = imports.string.intercalate ", " (imports.list.map show ls);
         tokens = [ "[" ] ++ imports.list.optional (! imports.list.empty ls) body ++ [ "]" ];
     in imports.string.intercalate " " tokens;
   showNull = const "null";
@@ -40,7 +40,7 @@ let
           { isType = builtins.isFloat; showType = showFloat; }
           { isType = builtins.isFunction; showType = showFunction; }
           { isType = builtins.isInt; showType = showInt; }
-          { isType = builtins.isList; showType = showList; }
+          { isType = builtins.isList; showType = showList showInternal; }
           { isType = builtins.isNull; showType = showNull; }
           { isType = builtins.isPath; showType = showPath; }
           { isType = builtins.isString; showType = showString; }
@@ -159,19 +159,34 @@ rec {
     check = x: builtins.isString x && builtins.substring 0 1 (builtins.toString x) == "/";
   };
 
-  listOf = type: mkType {
-    name = "[${type.name}]";
-    description = "list of ${type.description}s";
-    check = x: builtins.isList x && imports.list.all type.check x;
+  list = mkType {
+    name = "list";
+    description = "list";
+    check = builtins.isList;
+    show = showList show;
   };
+
+  listOf = type:
+    let check = x: imports.list.all type.check x;
+    in addCheck list check // {
+      name = "[${type.name}]";
+      description = "list of ${type.description}s";
+      show = showList type.show;
+    };
+
+  nonEmptyList =
+    let base = addCheck list (x: ! imports.list.empty x);
+    in base // {
+      name = "nonempty ${base.name}";
+      description = "non-empty ${base.description}";
+    };
 
   nonEmptyListOf = type:
     let base = addCheck (listOf type) (x: x != []);
     in base // {
-         name = "nonempty ${base.name}";
-         description = "non-empty " + base.description;
-         show = showList;
-       };
+      name = "nonempty ${base.name}";
+      description = "non-empty " + base.description;
+    };
 
   null = mkType {
     name = "null";
