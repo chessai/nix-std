@@ -17,6 +17,9 @@ section "std.nonempty" {
   show = string.unlines [
     (assertEqual "nonempty [ 0 ]" (types.nonEmpty.show (nonempty.make 0 [])))
     (assertEqual "nonempty [ 0, 1 ]" (types.nonEmpty.show (nonempty.make 0 [1])))
+    (assertEqual "{ foo = nonempty [ 0, 1 ]; }" ((types.attrsOf types.nonEmpty).show {
+      foo = nonempty.make 0 [1];
+    }))
   ];
 
   laws = string.unlines [

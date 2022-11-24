@@ -27,12 +27,12 @@ let
     in imports.string.intercalate " " tokens;
   showNull = const "null";
   showPath = builtins.toString;
-  showSet = s:
+  showSet = show: s:
     let showKey = k:
           let v = s.${k};
-          in "${k} = ${showInternal v};";
-        body = imports.string.intercalate " " (imports.list.map showKey (imports.set.keys s));
-    in "{ " + body + " }";
+          in "${k} = ${show v};";
+        body = imports.list.map showKey (imports.set.keys s);
+    in imports.string.intercalate " " ([ "{" ] ++ body ++ [ "}" ]);
   showString = s: "\"" + s + "\"";
   showNonEmpty = show: x:
     "nonempty " + showList show (imports.nonempty.toList x);
@@ -47,7 +47,7 @@ let
           { isType = builtins.isNull; showType = showNull; }
           { isType = builtins.isPath; showType = showPath; }
           { isType = builtins.isString; showType = showString; }
-          { isType = builtins.isAttrs; showType = showSet; }
+          { isType = builtins.isAttrs; showType = showSet showInternal; }
         ];
 
         /* show' :: a -> string */
@@ -148,7 +148,16 @@ rec {
     name = "attrs";
     description = "attribute set";
     check = builtins.isAttrs;
+    show = showSet show;
   };
+
+  attrsOf = type:
+    let check = x: imports.list.all type.check (imports.set.values x);
+    in addCheck attrs check // {
+      name = "${attrs.name} ${type.name}";
+      description = "${attrs.description} of ${type.description}s";
+      show = showSet type.show;
+    };
 
   drv = mkType {
     name = "derivation";

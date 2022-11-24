@@ -6,6 +6,19 @@ with (import ./../framework.nix);
 let
   testSet = { a = 0; b = 1; c = 2; };
 in section "std.set" {
+  check = string.unlines [
+    (assertEqual true (types.attrs.check {}))
+    (assertEqual false (types.attrs.check []))
+    (assertEqual true ((types.attrsOf types.int).check testSet))
+    (assertEqual true ((types.attrsOf types.int).check {}))
+    (assertEqual false ((types.attrsOf types.int).check (testSet // { d = "foo"; })))
+  ];
+
+  show = string.unlines [
+    (assertEqual "{ a = 0; b = 1; c = 2; }" (types.attrs.show testSet))
+    (assertEqual "{ }" (types.attrs.show {}))
+  ];
+
   empty = assertEqual set.empty {};
   optional = string.unlines [
     (assertEqual set.empty (set.optional false testSet))
