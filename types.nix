@@ -5,6 +5,7 @@ with rec {
 
 let
   imports = {
+    bool = import ./bool.nix;
     list = import ./list.nix;
     nonempty = import ./nonempty.nix;
     num = import ./num.nix;
@@ -242,6 +243,7 @@ rec {
     name = "either";
     description = "${a.description} or ${b.description}";
     check = x: a.check x || b.check x;
+    show = x: imports.bool.ifThenElse (a.check x) a.show b.show x;
   };
 
   oneOf = types:
