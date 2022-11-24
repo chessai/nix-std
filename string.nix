@@ -1,7 +1,8 @@
 with rec {
   function = import ./function.nix;
-  inherit (function) flip not;
+  inherit (function) compose const flip not;
 
+  bool = import ./bool.nix;
   list = import ./list.nix;
   regex = import ./regex.nix;
   num = import ./num.nix;
@@ -840,4 +841,51 @@ rec {
                  xs = list.drop 1 s;
                in list.cons x (go2 xs);
     in concat (list.map toLower (go2 (go1 str)));
+
+  /* convert :: a -> optional string
+     convert :: string | path | null | number | bool  -> optional.just string
+
+     Converts a value to a string following the same rules as `builtins.toString`,
+     returning `optional.nothing` if the value cannot be converted.
+  */
+  convert = let
+    typecheck = {
+      path = const true;
+      string = const true;
+      null = const true;
+      int = const true;
+      float = const true;
+      bool = const true;
+      list = list.all canConvert;
+      set = compose _optional.isJust coerce;
+    };
+    canConvert = x: typecheck.${builtins.typeOf x} or (const false) x;
+  in x: bool.toOptional (canConvert x) (unsafeConvert x);
+
+  /* @partial
+     unsafeConvert :: a -> string
+  */
+  unsafeConvert = toString;
+
+  /* coerce :: a -> optional string
+     coerce :: string | path -> optional.just string
+
+     Coerces a value to a string, or returns `optional.nothing`
+     if the value cannot be converted.
+     Besides strings and paths, only sets with either
+     `outPath` or `__toString` keys can be used.
+  */
+  coerce = let
+    typecheck = {
+      path = const true;
+      string = const true;
+      set = x: x ? outPath || x ? __toString;
+    };
+    canCoerce = x: typecheck.${builtins.typeOf x} or (const false) x;
+  in x: bool.toOptional (canCoerce x) (unsafeCoerce x);
+
+  /* @partial
+     unsafeCoerce :: a -> string
+  */
+  unsafeCoerce = builtins.substring 0 (-1);
 }

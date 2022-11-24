@@ -1,6 +1,6 @@
 with rec {
   function = import ./function.nix;
-  inherit (function) const flip;
+  inherit (function) compose const flip;
 
   tuple = import ./tuple.nix;
   inherit (tuple) tuple2;
@@ -13,6 +13,7 @@ let
     list = import ./list.nix;
     nonempty = import ./nonempty.nix;
     num = import ./num.nix;
+    optional = import ./optional.nix;
     set = import ./set.nix;
     string = import ./string.nix;
     types = import ./types.nix;
@@ -67,6 +68,7 @@ rec {
       inherit (imports.types) bool float int null list path lambda;
     } // {
       set = imports.nonempty.make imports.types.attrs [
+        imports.types.stringlike
         imports.types.functionSet
       ];
       string = imports.nonempty.make imports.types.string [
@@ -141,7 +143,14 @@ rec {
     name = "string";
     description = "string";
     check = builtins.isString;
-    show = s: "\"" + s + "\"";
+    show = imports.string.escapeNixString;
+  };
+
+  stringlike = mkType {
+    name = "stringlike";
+    description = "stringlike";
+    check = compose imports.optional.isJust imports.string.coerce;
+    inherit (string) show;
   };
 
   stringMatching = pattern: mkType {
@@ -174,9 +183,17 @@ rec {
   path = mkType {
     name = "path";
     description = "a path";
-    check = x: builtins.isString x && builtins.substring 0 1 (builtins.toString x) == "/";
+    check = builtins.isPath;
     show = builtins.toString;
   };
+
+  pathlike =
+    let check = x: imports.string.substring 0 1 (toString x) == "/";
+    in addCheck stringlike check // {
+      name = "pathlike";
+      description = "a pathlike string";
+      show = builtins.toString;
+    };
 
   list = mkType {
     name = "list";

@@ -5,6 +5,20 @@ with { inherit (std.tuple) tuple2; };
 with (import ./../framework.nix);
 
 section "std.string" {
+  check = string.unlines [
+    (assertEqual true (types.string.check "foo"))
+    (assertEqual false (types.string.check ./foo))
+    (assertEqual true (types.stringlike.check ./foo))
+    (assertEqual true (types.stringlike.check { outPath = ./foo; }))
+    (assertEqual true (types.stringlike.check { __toString = _ "foo"; }))
+    (assertEqual false (types.stringlike.check { }))
+  ];
+
+  show = string.unlines [
+    (assertEqual ''"foo"'' (types.string.show "foo"))
+    (assertEqual ''"foo"'' (types.stringlike.show { __toString = _: "foo"; }))
+  ];
+
   laws = string.unlines [
     (semigroup string.semigroup {
       typeName = "string";
@@ -210,5 +224,35 @@ section "std.string" {
     (assertEqual (string.camelTo "-" "BlahFooBlah") "blah-foo-blah")
     (assertEqual (string.camelTo "@" "blahblahblah") "blahblahblah")
     (assertEqual (string.camelTo "!" "blahblahBlah") "blahblah!blah")
+  ];
+
+  convert = string.unlines [
+    (assertEqual (optional.just "foo") (string.convert "foo"))
+    (assertEqual (optional.just "foo") (string.convert { __toString = _: "foo"; }))
+    (assertEqual (optional.just "/foo") (string.convert { outPath = "/foo"; }))
+    (assertEqual optional.nothing (string.convert { }))
+    (assertEqual (optional.just (toString ./default.nix)) (string.convert ./default.nix))
+    (assertEqual (optional.just "") (string.convert null))
+    (assertEqual (optional.just "1") (string.convert 1))
+    (assertEqual (optional.just (toString 1.0)) (string.convert 1.0))
+    (assertEqual (optional.just "1") (string.convert true))
+    (assertEqual (optional.just "") (string.convert false))
+    (assertEqual (optional.just "") (string.convert [ ]))
+    (assertEqual (optional.just "foo") (string.convert [ "foo" ]))
+    (assertEqual (optional.just "foo 1 ") (string.convert [ "foo" 1 null ]))
+    (assertEqual optional.nothing (string.convert ({ a }: a)))
+  ];
+  coerce = string.unlines [
+    (assertEqual (optional.just "foo") (string.coerce "foo"))
+    (assertEqual (optional.just "foo") (string.coerce { __toString = _: "foo"; }))
+    (assertEqual (optional.just "/foo") (string.coerce { outPath = "/foo"; }))
+    (assertEqual optional.nothing (string.coerce { }))
+    (assertEqual true (optional.isJust (string.coerce ./default.nix)))
+    (assertEqual optional.nothing (string.coerce null))
+    (assertEqual optional.nothing (string.coerce 1))
+    (assertEqual optional.nothing (string.coerce 1.0))
+    (assertEqual optional.nothing (string.coerce true))
+    (assertEqual optional.nothing (string.coerce [ "foo" ]))
+    (assertEqual optional.nothing (string.coerce ({ a }: a)))
   ];
 }
