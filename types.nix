@@ -11,51 +11,44 @@ let
     num = import ./num.nix;
     set = import ./set.nix;
     string = import ./string.nix;
+    types = import ./types.nix;
   };
   _null = null;
 
   /* unsafe show functions */
-  showBool = x:
-    if x == true
-    then "true"
-    else "false";
-  showFloat = builtins.toString;
   showFunction = const "<<lambda>>";
-  showInt = builtins.toString;
   showList = show: ls:
     let body = imports.string.intercalate ", " (imports.list.map show ls);
         tokens = [ "[" ] ++ imports.list.optional (! imports.list.empty ls) body ++ [ "]" ];
     in imports.string.intercalate " " tokens;
-  showNull = const "null";
-  showPath = builtins.toString;
   showSet = show: s:
     let showKey = k:
           let v = s.${k};
           in "${k} = ${show v};";
         body = imports.list.map showKey (imports.set.keys s);
     in imports.string.intercalate " " ([ "{" ] ++ body ++ [ "}" ]);
-  showString = s: "\"" + s + "\"";
   showNonEmpty = show: x:
     "nonempty " + showList show (imports.nonempty.toList x);
   showInternal = x:
-    let /* shows :: [{ isType :: a -> bool, showType :: a -> string }]*/
+    let /* shows :: [{ check :: a -> bool, show :: a -> string }]*/
+        inherit (imports) types;
         shows = [
-          { isType = builtins.isBool; showType = showBool; }
-          { isType = builtins.isFloat; showType = showFloat; }
-          { isType = builtins.isFunction; showType = showFunction; }
-          { isType = builtins.isInt; showType = showInt; }
-          { isType = builtins.isList; showType = showList showInternal; }
-          { isType = builtins.isNull; showType = showNull; }
-          { isType = builtins.isPath; showType = showPath; }
-          { isType = builtins.isString; showType = showString; }
-          { isType = builtins.isAttrs; showType = showSet showInternal; }
+          types.bool
+          types.float
+          { check = builtins.isFunction; show = showFunction; }
+          types.int
+          types.list
+          types.null
+          types.path
+          types.string
+          types.attrs
         ];
 
         /* show' :: a -> string */
         show' = (imports.list.foldr
-          (c: n: if n.isType x then n else c)
-          ({ isType = const false; showType = builtins.toString; })
-          shows).showType;
+          (c: n: if n.check x then n else c)
+          ({ check = const false; show = builtins.toString; })
+          shows).show;
     in show' x;
 
   addCheck = type: check: type // {
@@ -63,12 +56,10 @@ let
   };
 
   between = lo: hi:
-    let baseType = { check = builtins.isInt; };
-    in addCheck baseType (x: x >= lo && x <= hi) // {
-         name = "intBetween";
-         description = "an integer in [${builtins.toString lo}, ${builtins.toString hi}]";
-         show = showInt;
-       };
+    addCheck imports.types.int (x: x >= lo && x <= hi) // {
+      name = "intBetween";
+      description = "an integer in [${builtins.toString lo}, ${builtins.toString hi}]";
+    };
 
   unsigned = bit: lo: hi:
     between lo hi // {
@@ -107,12 +98,17 @@ rec {
     name = "bool";
     description = "boolean";
     check = builtins.isBool;
+    show = x:
+      if x == true
+      then "true"
+      else "false";
   };
 
   int = mkType {
     name = "int";
     description = "machine integer";
     check = builtins.isInt;
+    show = builtins.toString;
   };
 
   i8 = signed 8 (-128) 127;
@@ -131,12 +127,14 @@ rec {
     name = "f32";
     description = "32-bit floating point number";
     check = builtins.isFloat;
+    show = builtins.toString;
   };
 
   string = mkType {
     name = "string";
     description = "string";
     check = builtins.isString;
+    show = s: "\"" + s + "\"";
   };
 
   stringMatching = pattern: mkType {
@@ -170,6 +168,7 @@ rec {
     name = "path";
     description = "a path";
     check = x: builtins.isString x && builtins.substring 0 1 (builtins.toString x) == "/";
+    show = builtins.toString;
   };
 
   list = mkType {
@@ -222,6 +221,7 @@ rec {
     name = "null";
     description = "null";
     check = x: x == _null;
+    show = const "null";
   };
 
   nullOr = type: either null type;
