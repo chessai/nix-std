@@ -27,6 +27,8 @@ rec {
 
   optional = import ./optional.nix;
 
+  path = import ./path.nix;
+
   regex = import ./regex.nix;
 
   semigroup = import ./semigroup.nix;
