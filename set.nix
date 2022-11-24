@@ -1,6 +1,6 @@
 with rec {
   function = import ./function.nix;
-  inherit (function) id flip;
+  inherit (function) id flip compose;
   list = import ./list.nix;
 };
 
@@ -70,6 +70,10 @@ rec {
     }) names);
     zipAttrsWith = f: sets: zipAttrsWithNames (list.concatMap keys sets) f sets;
   in builtins.zipAttrsWith or zipAttrsWith;
+
+  /* mapToValues :: (key -> value -> a) -> set -> [a]
+  */
+  mapToValues = f: compose values (map f);
 
   /* filter :: (key -> value -> bool) -> set -> set
   */
