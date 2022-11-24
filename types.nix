@@ -29,27 +29,24 @@ let
     in imports.string.intercalate " " ([ "{" ] ++ body ++ [ "}" ]);
   showNonEmpty = show: x:
     "nonempty " + showList show (imports.nonempty.toList x);
+  typeShows = imports.set.map (_: imports.nonempty.singleton) {
+    inherit (imports.types) bool float int null list path;
+    lambda = { check = builtins.isFunction; show = showFunction; };
+    set = imports.types.attrs;
+  } // {
+    string = imports.nonempty.make imports.types.string [
+      imports.types.path
+    ];
+  };
+  /* showInternal' :: type -> a -> string */
+  showInternal' = type: x: (imports.nonempty.foldl'
+    (c: n: if n.check x then n else c)
+    type).show x;
   showInternal = x:
-    let /* shows :: [{ check :: a -> bool, show :: a -> string }]*/
-        inherit (imports) types;
-        shows = [
-          types.bool
-          types.float
-          { check = builtins.isFunction; show = showFunction; }
-          types.int
-          types.list
-          types.null
-          types.path
-          types.string
-          types.attrs
-        ];
-
-        /* show' :: a -> string */
-        show' = (imports.list.foldr
-          (c: n: if n.check x then n else c)
-          ({ check = const false; show = builtins.toString; })
-          shows).show;
-    in show' x;
+    let
+        typeName = builtins.typeOf x;
+        unknown = imports.nonempty.singleton { show = const "«${typeName}»"; };
+    in showInternal' typeShows.${typeName} or unknown x;
 
   addCheck = type: check: type // {
     check = x: type.check x && check x;
