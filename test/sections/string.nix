@@ -203,4 +203,10 @@ section "std.string" {
     (assertEqual (string.justifyCenter 2 "x" "foo") "foo")
     (assertEqual (string.justifyCenter 8 "xyz" "foo") "xyfooxyz")
   ];
+  camelTo = string.unlines [
+    (assertEqual (string.camelTo "_" "CamelAPICase") "camel_api_case")
+    (assertEqual (string.camelTo "-" "BlahFooBlah") "blah-foo-blah")
+    (assertEqual (string.camelTo "@" "blahblahblah") "blahblahblah")
+    (assertEqual (string.camelTo "!" "blahblahBlah") "blahblah!blah")
+  ];
 }
