@@ -5,63 +5,58 @@ with rec {
 
 let
   imports = {
+    bool = import ./bool.nix;
     list = import ./list.nix;
+    nonempty = import ./nonempty.nix;
     num = import ./num.nix;
     set = import ./set.nix;
     string = import ./string.nix;
+    types = import ./types.nix;
   };
   _null = null;
 
   /* unsafe show functions */
-  showBool = x:
-    if x == true
-    then "true"
-    else "false";
-  showFloat = builtins.toString;
   showFunction = const "<<lambda>>";
-  showInt = builtins.toString;
-  showList = ls: "[ " + imports.string.concatSep ", " (imports.list.map showInternal ls) + " ]";
-  showNull = const "null";
-  showPath = builtins.toString;
-  showSet = s:
+  showList = show: ls:
+    let body = imports.string.intercalate ", " (imports.list.map show ls);
+        tokens = [ "[" ] ++ imports.list.optional (! imports.list.empty ls) body ++ [ "]" ];
+    in imports.string.intercalate " " tokens;
+  showSet = show: s:
     let showKey = k:
           let v = s.${k};
-          in "${k} = ${showInternal v};";
-        body = imports.string.intercalate " " (imports.list.map showKey (imports.set.keys s));
-    in "{ " + body + " }";
-  showString = s: "\"" + s + "\"";
+          in "${k} = ${show v};";
+        body = imports.list.map showKey (imports.set.keys s);
+    in imports.string.intercalate " " ([ "{" ] ++ body ++ [ "}" ]);
+  showNonEmpty = show: x:
+    "nonempty " + showList show (imports.nonempty.toList x);
+  typeShows = imports.set.map (_: imports.nonempty.singleton) {
+    inherit (imports.types) bool float int null list path;
+    lambda = { check = builtins.isFunction; show = showFunction; };
+    set = imports.types.attrs;
+  } // {
+    string = imports.nonempty.make imports.types.string [
+      imports.types.path
+    ];
+  };
+  /* showInternal' :: type -> a -> string */
+  showInternal' = type: x: (imports.nonempty.foldl'
+    (c: n: if n.check x then n else c)
+    type).show x;
   showInternal = x:
-    let /* shows :: [{ isType :: a -> bool, showType :: a -> string }]*/
-        shows = [
-          { isType = builtins.isBool; showType = showBool; }
-          { isType = builtins.isFloat; showType = showFloat; }
-          { isType = builtins.isFunction; showType = showFunction; }
-          { isType = builtins.isInt; showType = showInt; }
-          { isType = builtins.isList; showType = showList; }
-          { isType = builtins.isNull; showType = showNull; }
-          { isType = builtins.isPath; showType = showPath; }
-          { isType = builtins.isString; showType = showString; }
-          { isType = builtins.isAttrs; showType = showSet; }
-        ];
-
-        /* show' :: a -> string */
-        show' = (imports.list.foldr
-          (c: n: if n.isType x then n else c)
-          ({ isType = const false; showType = builtins.toString; })
-          shows).showType;
-    in show' x;
+    let
+        typeName = builtins.typeOf x;
+        unknown = imports.nonempty.singleton { show = const "«${typeName}»"; };
+    in showInternal' typeShows.${typeName} or unknown x;
 
   addCheck = type: check: type // {
     check = x: type.check x && check x;
   };
 
   between = lo: hi:
-    let baseType = { check = builtins.isInt; };
-    in addCheck baseType (x: x >= lo && x <= hi) // {
-         name = "intBetween";
-         description = "an integer in [${builtins.toString lo}, ${builtins.toString hi}]";
-         show = showInt;
-       };
+    addCheck imports.types.int (x: x >= lo && x <= hi) // {
+      name = "intBetween";
+      description = "an integer in [${builtins.toString lo}, ${builtins.toString hi}]";
+    };
 
   unsigned = bit: lo: hi:
     between lo hi // {
@@ -100,12 +95,17 @@ rec {
     name = "bool";
     description = "boolean";
     check = builtins.isBool;
+    show = x:
+      if x == true
+      then "true"
+      else "false";
   };
 
   int = mkType {
     name = "int";
     description = "machine integer";
     check = builtins.isInt;
+    show = builtins.toString;
   };
 
   i8 = signed 8 (-128) 127;
@@ -124,12 +124,14 @@ rec {
     name = "f32";
     description = "32-bit floating point number";
     check = builtins.isFloat;
+    show = builtins.toString;
   };
 
   string = mkType {
     name = "string";
     description = "string";
     check = builtins.isString;
+    show = s: "\"" + s + "\"";
   };
 
   stringMatching = pattern: mkType {
@@ -142,7 +144,16 @@ rec {
     name = "attrs";
     description = "attribute set";
     check = builtins.isAttrs;
+    show = showSet show;
   };
+
+  attrsOf = type:
+    let check = x: imports.list.all type.check (imports.set.values x);
+    in addCheck attrs check // {
+      name = "${attrs.name} ${type.name}";
+      description = "${attrs.description} of ${type.description}s";
+      show = showSet type.show;
+    };
 
   drv = mkType {
     name = "derivation";
@@ -154,26 +165,60 @@ rec {
     name = "path";
     description = "a path";
     check = x: builtins.isString x && builtins.substring 0 1 (builtins.toString x) == "/";
+    show = builtins.toString;
   };
 
-  listOf = type: mkType {
-    name = "[${type.name}]";
-    description = "list of ${type.description}s";
-    check = x: builtins.isList x && imports.list.all type.check x;
+  list = mkType {
+    name = "list";
+    description = "list";
+    check = builtins.isList;
+    show = showList show;
   };
+
+  listOf = type:
+    let check = x: imports.list.all type.check x;
+    in addCheck list check // {
+      name = "[${type.name}]";
+      description = "list of ${type.description}s";
+      show = showList type.show;
+    };
+
+  nonEmptyList =
+    let base = addCheck list (x: ! imports.list.empty x);
+    in base // {
+      name = "nonempty ${base.name}";
+      description = "non-empty ${base.description}";
+    };
 
   nonEmptyListOf = type:
     let base = addCheck (listOf type) (x: x != []);
     in base // {
-         name = "nonempty ${base.name}";
-         description = "non-empty " + base.description;
-         show = showList;
-       };
+      name = "nonempty ${base.name}";
+      description = "non-empty " + base.description;
+    };
+
+  nonEmpty = mkType {
+    name = "nonempty";
+    description = "non-empty";
+    check = x: list.check x.tail or null && imports.set.keys x == [ "head" "tail" ];
+    show = showNonEmpty show;
+  };
+
+  nonEmptyOf = type: let
+    tail = listOf type;
+    check = x: type.check x.head && tail.check x.tail;
+    base = addCheck nonEmpty check;
+  in base // {
+    name = "${base.name} ${type.name}";
+    description = "${base.description} of ${type.description}s";
+    show = showNonEmpty type.show;
+  };
 
   null = mkType {
     name = "null";
     description = "null";
     check = x: x == _null;
+    show = const "null";
   };
 
   nullOr = type: either null type;
@@ -195,6 +240,7 @@ rec {
     name = "either";
     description = "${a.description} or ${b.description}";
     check = x: a.check x || b.check x;
+    show = x: imports.bool.ifThenElse (a.check x) a.show b.show x;
   };
 
   oneOf = types:

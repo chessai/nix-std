@@ -4,6 +4,24 @@ with std;
 with (import ./../framework.nix);
 
 section "std.nonempty" {
+  check = string.unlines [
+    (assertEqual true (types.nonEmpty.check (nonempty.make 3 [2 1])))
+    (assertEqual false (types.nonEmpty.check (nonempty.make 3 "foo")))
+    (assertEqual false (types.nonEmpty.check [ 1 ]))
+    (assertEqual false (types.nonEmpty.check (nonempty.make 3 [2 1] // { foo = "bar"; })))
+    (assertEqual true ((types.nonEmptyOf types.int).check (nonempty.make 3 [2 1])))
+    (assertEqual false ((types.nonEmptyOf types.int).check (nonempty.make 3 [2 "foo"])))
+    (assertEqual true ((types.nonEmptyListOf types.int).check (nonempty.toList (nonempty.make 3 [2 1]))))
+  ];
+
+  show = string.unlines [
+    (assertEqual "nonempty [ 0 ]" (types.nonEmpty.show (nonempty.make 0 [])))
+    (assertEqual "nonempty [ 0, 1 ]" (types.nonEmpty.show (nonempty.make 0 [1])))
+    (assertEqual "{ foo = nonempty [ 0, 1 ]; }" ((types.attrsOf types.nonEmpty).show {
+      foo = nonempty.make 0 [1];
+    }))
+  ];
+
   laws = string.unlines [
     (functor nonempty.functor {
       typeName = "nonempty";
