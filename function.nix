@@ -14,4 +14,13 @@ rec {
   /* flip :: (a -> b -> c) -> b -> a -> c
   */
   flip = f: b: a: f a b;
+
+  /* not :: (a -> bool) -> a -> bool
+
+     Inverts the boolean result of a function.
+
+     > function.not function.id true
+     false
+  */
+  not = f: a: ! f a;
 }

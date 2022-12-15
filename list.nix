@@ -1,6 +1,6 @@
 with rec {
   function = import ./function.nix;
-  inherit (function) const flip compose id;
+  inherit (function) const flip not compose id;
 
   num = import ./num.nix;
   inherit (num) min max;
@@ -566,7 +566,7 @@ rec {
      that if a list is empty, none of the elements match the predicate
      vacuously.
   */
-  none = p: xs: builtins.all (x: !p x) xs;
+  none = p: xs: builtins.all (not p) xs;
 
   /* count :: (a -> bool) -> [a] -> int
 
@@ -819,7 +819,7 @@ rec {
      [ 2 4 6 ]
   */
   takeWhile = pred: xs:
-    _optional.match (findIndex (x: !pred x) xs) {
+    _optional.match (findIndex (not pred) xs) {
       nothing = xs;
       just = i: take i xs;
     };
@@ -832,7 +832,7 @@ rec {
      [ 9 10 11 12 14 ]
   */
   dropWhile = pred: xs:
-    _optional.match (findIndex (x: !pred x) xs) {
+    _optional.match (findIndex (not pred) xs) {
       nothing = xs;
       just = i: drop i xs;
     };
@@ -845,7 +845,7 @@ rec {
      [ 12 14 ]
   */
   takeWhileEnd = pred: xs:
-    _optional.match (findLastIndex (x: !pred x) xs) {
+    _optional.match (findLastIndex (not pred) xs) {
       nothing = xs;
       just = i: drop (i + 1) xs;
     };
@@ -858,7 +858,7 @@ rec {
      [ 2 4 6 9 10 11 ]
   */
   dropWhileEnd = pred: xs:
-    _optional.match (findLastIndex (x: !pred x) xs) {
+    _optional.match (findLastIndex (not pred) xs) {
       nothing = xs;
       just = i: take (i + 1) xs;
     };
@@ -872,7 +872,7 @@ rec {
      { _0 = [ 2 4 6 ]; _1 = [ 9 10 11 12 14 ]; }
   */
   span = pred: xs:
-    _optional.match (findIndex (x: !pred x) xs) {
+    _optional.match (findIndex (not pred) xs) {
       nothing = { _0 = xs; _1 = []; };
       just = n: splitAt n xs;
     };

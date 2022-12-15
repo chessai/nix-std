@@ -2,6 +2,8 @@ with rec {
   string = import ./string.nix;
   list = import ./list.nix;
   optional = import ./optional.nix;
+  function = import ./function.nix;
+  inherit (function) not;
 };
 
 rec {
@@ -134,7 +136,7 @@ rec {
      [ "1" "2" "3" ]
   */
   splitOn = regex: str:
-    list.filter (x: !builtins.isList x) (split regex str);
+    list.filter (not builtins.isList) (split regex str);
 
   /* substituteWith :: regex -> ([nullable string] -> string) -> string -> string
 

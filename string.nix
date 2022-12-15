@@ -1,6 +1,6 @@
 with rec {
   function = import ./function.nix;
-  inherit (function) flip;
+  inherit (function) flip not;
 
   list = import ./list.nix;
   regex = import ./regex.nix;
@@ -499,7 +499,7 @@ rec {
      Return the longest prefix of the string that satisfies the predicate.
   */
   takeWhile = pred: str:
-    let n = findIndex (x: !pred x) str;
+    let n = findIndex (not pred) str;
     in if n._tag == "nothing"
       then str
       else take n.value str;
@@ -509,7 +509,7 @@ rec {
      Return the rest of the string after the prefix returned by 'takeWhile'.
   */
   dropWhile = pred: str:
-    let n = findIndex (x: !pred x) str;
+    let n = findIndex (not pred) str;
     in if n._tag == "nothing"
       then ""
       else drop n.value str;
@@ -519,7 +519,7 @@ rec {
      Return the longest suffix of the string that satisfies the predicate.
   */
   takeWhileEnd = pred: str:
-    let n = findLastIndex (x: !pred x) str;
+    let n = findLastIndex (not pred) str;
     in if n._tag == "nothing"
       then ""
       else drop (n.value + 1) str;
@@ -529,7 +529,7 @@ rec {
      Return the rest of the string after the suffix returned by 'takeWhileEnd'.
   */
   dropWhileEnd = pred: str:
-    let n = findLastIndex (x: !pred x) str;
+    let n = findLastIndex (not pred) str;
     in if n._tag == "nothing"
       then ""
       else take (n.value + 1) str;
@@ -546,7 +546,7 @@ rec {
      of this prefix and the rest of the string.
   */
   span = pred: str:
-    let n = findIndex (x: !pred x) str;
+    let n = findIndex (not pred) str;
     in if n._tag == "nothing"
       then { _0 = str; _1 = ""; }
       else splitAt n.value str;
