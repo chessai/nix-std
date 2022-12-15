@@ -364,7 +364,7 @@ rec {
   */
   unsafeIndex = builtins.elemAt;
 
-  /* index :: [a] -> int -> a
+  /* index :: [a] -> int -> optional a
 
      Get the nth element of a list, indexed from 0. Returns `optional.nothing`
      if the index is out of bounds of the list.
