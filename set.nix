@@ -61,10 +61,6 @@ rec {
   */
   map = builtins.mapAttrs;
 
-  /* mapWithKey :: (key -> value -> (key, value)) -> set -> set
-  */
-  mapWithKey = f: s: fromList (list.map ({ _0, _1 }: f _0 _1) (toList s));
-
   /* mapZip :: (key -> [value] -> value) -> [set] -> set
   */
   mapZip = let
