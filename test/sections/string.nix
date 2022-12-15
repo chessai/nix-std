@@ -48,6 +48,7 @@ section "std.string" {
   concatImap = assertEqual (string.concatImap (i: x: x + builtins.toJSON i) [ "foo" "bar" "baz" ]) "foo0bar1baz2";
   concatImapSep = assertEqual (string.concatImapSep "\n" (i: x: builtins.toJSON (i + 1) + ": " + x) [ "foo" "bar" "baz" ]) "1: foo\n2: bar\n3: baz";
   toChars = assertEqual (string.toChars "foo") ["f" "o" "o"];
+  fromChars = assertEqual (string.fromChars ["f" "o" "o"]) "foo";
   map = assertEqual (string.map (x: x + " ") "foo") "f o o ";
   imap = assertEqual (string.imap (i: x: builtins.toJSON i + x) "foo") "0f1o2o";
   filter = assertEqual (string.filter (x: x != " ") "foo bar baz") "foobarbaz";
