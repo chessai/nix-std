@@ -781,4 +781,60 @@ rec {
     in if fillLen > 0
       then justifyRight (strLen + leftLen + rightLen) fill (justifyLeft (strLen + leftLen) fill str)
       else throw "std.string.justifyCenter: empty padding string";
+
+
+  /* camelTo :: char -> string -> string
+
+     Converts from CamelCase to another lower case, interspersing
+     the character between all capital letters and their previous
+     entries.
+
+     > string.camelTo "_" "CamelAPICase"
+     "camel_api_case"
+     > string.camelTo "-" "BlahFooBlah"
+     "blah-foo-blah"
+     > string.camelTo "@" "blahblahblah"
+     "blahblahblah"
+     > string.camelTo "!" "blahblahBlah"
+     "blahblah!blah"
+  */
+  camelTo = sep: s0:
+    let
+      str = toChars s0;
+      go1 = s:
+        if list.empty s
+        then []
+        else if list.length s >= 3
+             then
+               let
+                 x = list.unsafeIndex s 0;
+                 u = list.unsafeIndex s 1;
+                 l = list.unsafeIndex s 2;
+                 xs = list.drop 3 s;
+               in if isUpper u && isLower l
+                  then list.cons x (list.cons sep (list.cons u (list.cons l (go1 xs))))
+                  else list.cons x (go1 (list.drop 1 s))
+             else
+               let
+                 x = list.unsafeIndex s 0;
+                 xs = list.drop 1 s;
+               in list.cons x (go1 xs);
+      go2 = s:
+        if list.empty s
+        then []
+        else if list.length s >= 2
+             then
+               let
+                 l = list.unsafeIndex s 0;
+                 u = list.unsafeIndex s 1;
+                 xs = list.drop 2 s;
+               in if isLower l && isUpper u
+                  then list.cons l (list.cons sep (list.cons u (go2 xs)))
+                  else list.cons (list.unsafeIndex s 0) (go2 (list.drop 1 s))
+             else
+               let
+                 x = list.unsafeIndex s 0;
+                 xs = list.drop 1 s;
+               in list.cons x (go2 xs);
+    in concat (list.map toLower (go2 (go1 str)));
 }
