@@ -164,8 +164,22 @@ section "std.string" {
   ];
   unwords = assertEqual (string.unwords [ "foo" "bar" ]) "foo bar";
   intercalate = assertEqual (string.intercalate ", " ["1" "2" "3"]) "1, 2, 3";
-  toLower = assertEqual (string.toLower "FOO bar") "foo bar";
-  toUpper = assertEqual (string.toUpper "FOO bar") "FOO BAR";
+  toLower = string.unlines [
+    (assertEqual (string.toLower "FOO bar") "foo bar")
+    (assertEqual (string.toLower (string.fromChars (string.upperChars ++ string.lowerChars))) (string.fromChars ((string.lowerChars ++ string.lowerChars))))
+  ];
+  toUpper = string.unlines [
+    (assertEqual (string.toUpper "FOO bar") "FOO BAR")
+    (assertEqual (string.toUpper (string.fromChars (string.upperChars ++ string.lowerChars))) (string.fromChars ((string.upperChars ++ string.upperChars))))
+  ];
+  isLower = string.unlines (
+       list.map (c: assertEqual (string.isLower c) true) (string.toChars "abcdefghijklmnopqrstuv")
+    ++ list.map (c: assertEqual (string.isLower c) false) (string.toChars "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+  );
+  isUpper = string.unlines (
+       list.map (c: assertEqual (string.isUpper c) true) (string.toChars "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    ++ list.map (c: assertEqual (string.isUpper c) false) (string.toChars "abcdefghijklmnopqrstuv")
+  );
   strip = string.unlines [
     (assertEqual (string.strip "   \t\t  foo   \t") "foo")
     (assertEqual (string.strip "   \t\t   \t") string.empty)

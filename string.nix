@@ -164,7 +164,7 @@ rec {
   */
   concatImapSep = sep: f: strs: concatSep sep (list.imap f strs);
 
-  /* toChars :: string -> [string]
+  /* toChars :: string -> [char]
 
      Convert a string to a list of the characters in the string.
 
@@ -172,6 +172,15 @@ rec {
      [ "f" "o" "o" ]
   */
   toChars = str: list.generate (unsafeIndex str) (length str);
+
+  /* fromChars :: [char] -> string
+
+     Convert a list of characters to a string.
+
+     > string.fromChars [ "f" "o" "o" ]
+     "foo"
+  */
+  fromChars = ls: list.foldr (c: s: c + s) "" ls;
 
   /* map :: (string -> string) -> string -> string
 
@@ -657,6 +666,18 @@ rec {
      Convert an ASCII string to uppercase.
   */
   toUpper = replace lowerChars upperChars;
+
+  /* isUpper :: char -> string
+
+     Returns 'true' if the input character is ASCII uppercase.
+  */
+  isUpper = c: list.elem c upperChars;
+
+  /* isLower :: char -> string
+
+     Returns 'true' if the input character is ASCII lowercase.
+  */
+  isLower = c: list.elem c lowerChars;
 
   /* strip :: string -> string
 
