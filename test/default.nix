@@ -6,7 +6,7 @@ with std;
 
 with { sections = import ./sections/default.nix; };
 
-builtins.derivation {
+builtins.deepSeq std builtins.derivation {
   name = "nix-std-test-${import ./../version.nix}";
   inherit system;
   builder = "/bin/sh";
