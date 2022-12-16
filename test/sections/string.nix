@@ -1,5 +1,6 @@
 with { std = import ./../../default.nix; };
 with std;
+with { inherit (std.tuple) tuple2; };
 
 with (import ./../framework.nix);
 
@@ -137,9 +138,9 @@ section "std.string" {
   dropWhile = assertEqual (string.dropWhile (x: x != " ") "foo bar baz") " bar baz";
   takeWhileEnd = assertEqual (string.takeWhileEnd (x: x != " ") "foo bar baz") "baz";
   dropWhileEnd = assertEqual (string.dropWhileEnd (x: x != " ") "foo bar baz") "foo bar ";
-  splitAt = assertEqual (string.splitAt 3 "foobar") { _0 = "foo"; _1 = "bar"; };
-  span = assertEqual (string.span (x: x != " ") "foo bar baz") { _0 = "foo"; _1 = " bar baz"; };
-  break = assertEqual (string.break (x: x == " ") "foo bar baz") { _0 = "foo"; _1 = " bar baz"; };
+  splitAt = assertEqual (string.splitAt 3 "foobar") (tuple2 "foo" "bar");
+  span = assertEqual (string.span (x: x != " ") "foo bar baz") (tuple2 "foo" " bar baz");
+  break = assertEqual (string.break (x: x == " ") "foo bar baz") (tuple2 "foo" " bar baz");
   reverse = string.unlines [
     (assertEqual (string.reverse "foobar") "raboof")
     (assertEqual (string.reverse string.empty) string.empty)

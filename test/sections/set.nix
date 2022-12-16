@@ -1,5 +1,6 @@
 with { std = import ./../../default.nix; };
 with std;
+with { inherit (std.tuple) tuple2; };
 
 with (import ./../framework.nix);
 
@@ -34,9 +35,9 @@ in section "std.set" {
   filter = assertEqual { b = 1; } (set.filter (k: v: v == 1) testSet);
   traverse = assertEqual testSet (set.traverse nullable.applicative (x: if (num.even x || num.odd x) then x else null) testSet);
   toList = assertEqual [
-    { _0 = "a"; _1 = 0; }
-    { _0 = "b"; _1 = 1; }
-    { _0 = "c"; _1 = 2; }
+    (tuple2 "a" 0)
+    (tuple2 "b" 1)
+    (tuple2 "c" 2)
   ] (set.toList testSet);
   fromList = assertEqual testSet (set.fromList (set.toList testSet));
   gen = assertEqual (set.gen [ "a" "b" ] id) { a = "a"; b = "b"; };

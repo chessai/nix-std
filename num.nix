@@ -1,7 +1,10 @@
-with {
+with rec {
   list = import ./list.nix;
   string = import ./string.nix;
   optional = import ./optional.nix;
+
+  tuple = import ./tuple.nix;
+  inherit (tuple) tuple2;
 };
 
 let
@@ -90,11 +93,11 @@ in rec {
 
   /* quotRem :: Integral a => a -> a -> (a, a)
   */
-  quotRem = n: d: { _0 = quot n d; _1 = rem n d; };
+  quotRem = n: d: tuple2 (quot n d) (rem n d);
 
   /* divMod :: Integral a => a -> a -> (a, a)
   */
-  divMod = n: d: { _0 = div n d; _1 = mod n d; };
+  divMod = n: d: tuple2 (div n d) (mod n d);
 
   /* even :: integer -> bool
   */
