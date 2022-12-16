@@ -40,4 +40,25 @@ in section "std.set" {
   ] (set.toList testSet);
   fromList = assertEqual testSet (set.fromList (set.toList testSet));
   gen = assertEqual (set.gen [ "a" "b" ] id) { a = "a"; b = "b"; };
+
+  get = string.unlines [
+    (assertEqual (set.get "a" { a = 0; }) (optional.just 0))
+    (assertEqual (set.get "a" { }) optional.nothing)
+    (assertEqual (set.unsafeGet "a" { a = 0; }) 0)
+  ];
+  getOr = assertEqual (set.getOr 0 "a" {}) 0;
+
+  at = string.unlines [
+    (assertEqual (set.at [ "a" "b" ] { a.b = 0; }) (optional.just 0))
+    (assertEqual (set.at [ "a" "c" ] { a.b = 0; }) optional.nothing)
+    (assertEqual (set.at [ "a" "b" "c" ] { a.b = 0; }) optional.nothing)
+    (assertEqual (set.unsafeAt [ "a" "b" ] { a.b = 0; }) 0)
+  ];
+  atOr = assertEqual (set.atOr null [ "a" "b" "c" ] { a.b = 0; }) null;
+
+  assign = assertEqual (set.assign "a" 0 { }) { a = 0; };
+  assignAt = assertEqual (set.assignAt [ "a" ] 0 { }) { a = 0; };
+  assignAtPath = assertEqual (set.assignAt [ "a" "x" ] 0 { }) { a.x = 0; };
+  assignAtEmpty = assertEqual (set.assignAt [ ] { a = 0; } testSet) { a = 0; };
+  assignAtMerge = assertEqual (set.assignAt [ "x" "y" ] 0 testSet) (testSet // { x.y = 0; });
 }
