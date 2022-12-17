@@ -6,6 +6,9 @@ with rec {
   inherit (num) min max;
 
   _optional = import ./optional.nix;
+
+  tuple = import ./tuple.nix;
+  inherit (tuple) tuple2;
 };
 
 rec {
@@ -452,10 +455,7 @@ rec {
   */
   uncons = xs: if (length xs == 0)
     then _optional.nothing
-    else _optional.just {
-      _0 = builtins.head xs;
-      _1 = builtins.tail xs;
-    };
+    else _optional.just (tuple2 (builtins.head xs) (builtins.tail xs));
 
   /* snoc :: [a] -> a -> [a]
 
@@ -659,7 +659,7 @@ rec {
   */
   partition = p: xs:
     let bp = builtins.partition p xs;
-    in { _0 = bp.right; _1 = bp.wrong; };
+    in tuple2 bp.right bp.wrong;
 
   /* traverse :: Applicative f => (a -> f b) -> [a] -> f [b]
 
@@ -695,7 +695,7 @@ rec {
      > list.zip [ 1 2 3 ] [ 4 5 6 7 ]
      [ { _0 = 1; _1 = 4; } { _0 = 2; _1 = 5; } { _0 = 3; _1 = 6; } ]
   */
-  zip = zipWith (x: y: { _0 = x; _1 = y; });
+  zip = zipWith tuple2;
 
   /* reverse :: [a] -> [a]
 
@@ -715,7 +715,7 @@ rec {
      list, and the value to pass to the next iteration. To finish building the
      list, the function should return null.
 
-     > list.unfold (n: if n == 0 then optional.nothing else optional.just { _0 = n; _1 = n - 1; }) 10
+     > list.unfold (n: if n == 0 then optional.nothing else optional.just (tuple2 n (n - 1))) 10
      [ 10 9 8 7 6 5 4 3 2 1 ]
   */
   unfold = f: x0:
@@ -809,7 +809,7 @@ rec {
      > list.splitAt 1 [ 1 2 3 ]
      { _0 = [ 1 ]; _1 = [ 2 3 ]; }
   */
-  splitAt = n: xs: { _0 = take n xs; _1 = drop n xs; };
+  splitAt = n: xs: tuple2 (take n xs) (drop n xs);
 
   /* takeWhile :: (a -> bool) -> [a] -> [a]
 
@@ -873,7 +873,7 @@ rec {
   */
   span = pred: xs:
     _optional.match (findIndex (not pred) xs) {
-      nothing = { _0 = xs; _1 = []; };
+      nothing = tuple2 xs [];
       just = n: splitAt n xs;
     };
 
@@ -887,7 +887,7 @@ rec {
   */
   break = pred: xs:
     _optional.match (findIndex pred xs) {
-      nothing = { _0 = xs; _1 = []; };
+      nothing = tuple2 xs [];
       just = n: splitAt n xs;
     };
 }

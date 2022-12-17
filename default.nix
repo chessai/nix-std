@@ -37,6 +37,8 @@ rec {
 
   string = import ./string.nix;
 
+  tuple = import ./tuple.nix;
+
   types = import ./types.nix;
 
   version = import ./version.nix;

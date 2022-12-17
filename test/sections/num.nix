@@ -1,5 +1,6 @@
 with { std = import ./../../default.nix; };
 with std;
+with { inherit (std.tuple) tuple2; };
 
 with (import ./../framework.nix);
 
@@ -54,8 +55,8 @@ section "std.num" {
     (assertEqual (num.mod (-18) 7) 3)
     (assertEqual (num.mod (-18) (-7)) (-4))
   ];
-  quotRem = assertEqual (num.quotRem (-18) 7) { _0 = (-2); _1 = (-4); };
-  divMod = assertEqual (num.divMod (-18) 7) { _0 = (-3); _1 = 3; };
+  quotRem = assertEqual (num.quotRem (-18) 7) (tuple2 (-2) (-4));
+  divMod = assertEqual (num.divMod (-18) 7) (tuple2 (-3) 3);
   even = string.unlines [
     (assertEqual (num.even (-1)) false)
     (assertEqual (num.even 0) true)

@@ -6,6 +6,9 @@ with rec {
   regex = import ./regex.nix;
   num = import ./num.nix;
   _optional = import ./optional.nix;
+
+  tuple = import ./tuple.nix;
+  inherit (tuple) tuple2;
 };
 
 rec {
@@ -538,7 +541,7 @@ rec {
 
      Return a tuple of the parts of the string before and after the given index.
   */
-  splitAt = n: str: { _0 = take n str; _1 = drop n str; };
+  splitAt = n: str: tuple2 (take n str) (drop n str);
 
   /* span :: (string -> bool) -> string -> (string, string)
 
@@ -548,7 +551,7 @@ rec {
   span = pred: str:
     let n = findIndex (not pred) str;
     in if n._tag == "nothing"
-      then { _0 = str; _1 = ""; }
+      then tuple2 str ""
       else splitAt n.value str;
 
   /* break :: (string -> bool) -> string -> (string, string)
@@ -559,7 +562,7 @@ rec {
   break = pred: str:
     let n = findIndex pred str;
     in if n._tag == "nothing"
-      then { _0 = str; _1 = ""; }
+      then tuple2 str ""
       else splitAt n.value str;
 
   /* reverse :: string -> string

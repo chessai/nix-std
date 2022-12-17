@@ -1,6 +1,9 @@
 with rec {
   function = import ./function.nix;
   inherit (function) const flip;
+
+  tuple = import ./tuple.nix;
+  inherit (tuple) tuple2;
 };
 
 let
@@ -246,7 +249,7 @@ rec {
   oneOf = types:
     let ht = imports.list.match types {
           nil = throw "types.oneOf needs at least one type in its argument";
-          cons = x: xs: { _0 = x; _1 = xs; };
+          cons = x: xs: tuple2 x xs;
         };
     in imports.list.foldl' either ht._0 ht._1;
 }

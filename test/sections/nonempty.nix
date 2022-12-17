@@ -1,5 +1,6 @@
 with { std = import ./../../default.nix; };
 with std;
+with { inherit (std.tuple) tuple2; };
 
 with (import ./../framework.nix);
 
@@ -172,7 +173,7 @@ section "std.nonempty" {
   elem = assertEqual builtins.true (nonempty.elem "friend" (nonempty.make "texas" ["friend" "amigo"]));
   notElem = assertEqual builtins.true (nonempty.notElem "foo" (nonempty.make "texas" ["friend" "amigo"]));
   cons = assertEqual (nonempty.make 1 [2 3 4 5]) (nonempty.cons 1 (nonempty.make 2 [3 4 5]));
-  uncons = assertEqual { _0 = 1; _1 = [2 3 4 5]; } (nonempty.uncons (nonempty.make 1 [2 3 4 5]));
+  uncons = assertEqual (tuple2 1 [2 3 4 5]) (nonempty.uncons (nonempty.make 1 [2 3 4 5]));
   snoc = assertEqual (nonempty.make 1 [2 3 4 5]) (nonempty.snoc (nonempty.make 1 [2 3 4]) 5);
 
   foldr = assertEqual 55 (nonempty.foldr builtins.add (nonempty.unsafeFromList (list.range 1 10)));
@@ -209,7 +210,7 @@ section "std.nonempty" {
     (nonempty.make "foo-0" ["foo-1" "foo-2"])
     (nonempty.zipWith (s: i: s + "-" + builtins.toString i) (nonempty.unsafeFromList (list.replicate 10 "foo")) (nonempty.unsafeFromList (list.range 0 2)));
   zip = assertEqual
-    (nonempty.make { _0 = "foo"; _1 = 0; } [{ _0 = "foo"; _1 = 1; } { _0 = "foo"; _1 = 2; }])
+    (nonempty.make (tuple2 "foo" 0) [(tuple2 "foo" 1) (tuple2 "foo" 2)])
     (nonempty.zip (nonempty.unsafeFromList (list.replicate 10 "foo")) (nonempty.unsafeFromList (list.range 0 2)));
   sequence = string.unlines [
     (let ls = nonempty.unsafeFromList (list.range 1 10); in assertEqual ls (nonempty.sequence nullable.applicative ls))

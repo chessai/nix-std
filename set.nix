@@ -8,6 +8,9 @@ with rec {
   imports = {
     optional = import ./optional.nix;
   };
+
+  tuple = import ./tuple.nix;
+  inherit (tuple) tuple2;
 };
 
 rec {
@@ -143,10 +146,10 @@ rec {
   /* mapZip :: (key -> [value] -> value) -> [set] -> set
   */
   mapZip = let
-    zipAttrsWithNames = names: f: sets: fromList (list.map (name: {
-      _0 = name;
-      _1 = f name (getAll name sets);
-    }) names);
+    zipAttrsWithNames = names: f: sets: fromList (list.map (name: tuple2
+      name
+      (f name (getAll name sets))
+    ) names);
     zipAttrsWith = f: sets: zipAttrsWithNames (list.concatMap keys sets) f sets;
   in builtins.zipAttrsWith or zipAttrsWith;
 
@@ -178,13 +181,13 @@ rec {
 
   /* toList :: set -> [(key, value)]
   */
-  toList = s: list.map (k: { _0 = k; _1 = s.${k}; }) (keys s);
+  toList = s: list.map (k: tuple2 k s.${k}) (keys s);
 
   /* fromList :: [(key, value)] -> set
   */
-  fromList = xs: builtins.listToAttrs (list.map ({ _0, _1 }: { name = _0; value = _1; }) xs);
+  fromList = xs: builtins.listToAttrs (list.map tuple.toPair xs);
 
   /* gen :: [key] -> (key -> value) -> set
   */
-  gen = keys: f: fromList (list.map (n: { _0 = n; _1 = f n; }) keys);
+  gen = keys: f: fromList (list.map (n: tuple2 n (f n)) keys);
 }

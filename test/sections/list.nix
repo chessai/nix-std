@@ -1,5 +1,6 @@
 with { std = import ./../../default.nix; };
 with std;
+with { inherit (std.tuple) tuple2; };
 
 with (import ./../framework.nix);
 
@@ -195,7 +196,7 @@ section "std.list" {
   cons = assertEqual [1 2 3 4 5] (list.cons 1 [2 3 4 5]);
   uncons = string.unlines [
     (assertEqual optional.nothing (list.uncons []))
-    (assertEqual (optional.just { _0 = 1; _1 = [2 3]; }) (list.uncons [1 2 3]))
+    (assertEqual (optional.just (tuple2 1 [2 3])) (list.uncons [1 2 3]))
   ];
   snoc = assertEqual [1 2 3 4 5] (list.snoc [1 2 3 4] 5);
 
@@ -245,14 +246,14 @@ section "std.list" {
   ];
   range = assertEqual [1 2 3 4 5] (list.range 1 5);
   partition = string.unlines [
-    (assertEqual { _0 = [1 3 5 7]; _1 = [0 2 4 6 8]; } (list.partition num.odd (list.range 0 8)))
-    (assertEqual { _0 = ["foo" "fum"]; _1 = ["haha"]; } (list.partition (string.hasPrefix "f") ["foo" "fum" "haha"]))
+    (assertEqual (tuple2 [1 3 5 7] [0 2 4 6 8]) (list.partition num.odd (list.range 0 8)))
+    (assertEqual (tuple2 ["foo" "fum"] ["haha"]) (list.partition (string.hasPrefix "f") ["foo" "fum" "haha"]))
   ];
   zipWith = assertEqual
     ["foo-0" "foo-1" "foo-2"]
     (list.zipWith (s: i: s + "-" + builtins.toString i) (list.replicate 10 "foo") (list.range 0 2));
   zip = assertEqual
-    [{ _0 = "foo"; _1 = 0; } { _0 = "foo"; _1 = 1; } { _0 = "foo"; _1 = 2; }]
+    [(tuple2 "foo" 0) (tuple2 "foo" 1) (tuple2 "foo" 2)]
     (list.zip (list.replicate 10 "foo") (list.range 0 2));
   sequence = string.unlines [
     (let ls = list.range 1 10; in assertEqual ls (list.sequence nullable.applicative ls))
@@ -267,7 +268,7 @@ section "std.list" {
   ];
 
   unfold = assertEqual [10 9 8 7 6 5 4 3 2 1]
-    (list.unfold (n: if n == 0 then optional.nothing else optional.just { _0 = n; _1 = n - 1; }) 10);
+    (list.unfold (n: if n == 0 then optional.nothing else optional.just (tuple2 n (n - 1))) 10);
 
   findIndex = string.unlines [
     (assertEqual (optional.just 1) (list.findIndex num.even [ 1 2 3 4 ]))
@@ -289,7 +290,7 @@ section "std.list" {
     (assertEqual optional.nothing (list.findLast num.even [ 1 3 5 ]))
   ];
 
-  splitAt = assertEqual { _0 = [ 1 ]; _1 = [ 2 3 ]; } (list.splitAt 1 [ 1 2 3 ]);
+  splitAt = assertEqual (tuple2 [ 1 ] [ 2 3 ]) (list.splitAt 1 [ 1 2 3 ]);
 
   takeWhile = assertEqual [ 2 4 6 ] (list.takeWhile num.even [ 2 4 6 9 10 11 12 14 ]);
 
@@ -299,9 +300,9 @@ section "std.list" {
 
   dropWhileEnd = assertEqual [ 2 4 6 9 10 11 ] (list.dropWhileEnd num.even [ 2 4 6 9 10 11 12 14 ]);
 
-  span = assertEqual { _0 = [ 2 4 6 ]; _1 = [ 9 10 11 12 14 ]; }
+  span = assertEqual (tuple2 [ 2 4 6 ] [ 9 10 11 12 14 ])
     (list.span num.even [ 2 4 6 9 10 11 12 14 ]);
 
-  break = assertEqual { _0 = [ 2 4 6 ]; _1 = [ 9 10 11 12 14 ]; }
+  break = assertEqual (tuple2 [ 2 4 6 ] [ 9 10 11 12 14 ])
     (list.break num.odd [ 2 4 6 9 10 11 12 14 ]);
 }

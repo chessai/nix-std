@@ -32,7 +32,7 @@ in rec {
         if builtins.isList v
           then "[${string.concatMapSep ", " tomlValue v}]"
         else if builtins.isAttrs v
-          then "{${string.concatMapSep ", " ({ _0, _1 }: tomlKV _0 _1) (set.toList v)}}"
+          then "{${string.concatMapSep ", " (kv: tomlKV kv._0 kv._1) (set.toList v)}}"
         else tomlEscapeValue v;
 
       # Render an inline TOML "key = value" pair
@@ -69,7 +69,7 @@ in rec {
           # Render values that are objects using tables
           tableSplit = list.partition ({ _1, ... }: builtins.isAttrs _1) attrList;
           tablesToml = string.concatMapSep "\n\n"
-            ({ _0, _1 }: tomlTable prefix _0 _1)
+            (kv: tomlTable prefix kv._0 kv._1)
             tableSplit._0;
 
           # Use [[]] syntax only on arrays of attrsets
@@ -77,11 +77,11 @@ in rec {
             ({ _1, ... }: builtins.isList _1 && _1 != [] && list.all builtins.isAttrs _1)
             tableSplit._1;
           tableArraysToml = string.concatMapSep "\n\n"
-            ({ _0, _1 }: tomlTableArray prefix _0 _1)
+            (kv: tomlTableArray prefix kv._0 kv._1)
             tableArraySplit._0;
 
           # Everything else becomes bare "key = value" pairs
-          pairsToml = string.concatMapSep "\n" ({ _0, _1 }: tomlKV _0 _1) tableArraySplit._1;
+          pairsToml = string.concatMapSep "\n" (kv: tomlKV kv._0 kv._1) tableArraySplit._1;
         in string.concatSep "\n\n" (list.concatMap optionalNonempty [
           pairsToml
           tablesToml
