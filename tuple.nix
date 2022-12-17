@@ -33,4 +33,10 @@
   over8 = f: x@{ _8, ... }: x // { _8 = f _8; };
   over9 = f: x@{ _9, ... }: x // { _9 = f _9; };
   over10 = f: x@{ _10, ... }: x // { _10 = f _10; };
+
+  /* toPair :: (a, b) -> { name : a, value : b }
+
+     Converts a 2-tuple to the argument required by e.g. `builtins.listToAttrs`
+  */
+  toPair = { _0, _1 }: { name = _0; value = _1; };
 }

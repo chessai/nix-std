@@ -185,7 +185,7 @@ rec {
 
   /* fromList :: [(key, value)] -> set
   */
-  fromList = xs: builtins.listToAttrs (list.map (x: { name = x._0; value = x._1; }) xs);
+  fromList = xs: builtins.listToAttrs (list.map tuple.toPair xs);
 
   /* gen :: [key] -> (key -> value) -> set
   */
