@@ -138,58 +138,79 @@ in rec {
   toFloat = x: x + 0.0;
 
   sin = t:
-    let x = toFloat t;
-        x2 = x * x;
-        x3 = x2 * x;
-        x5 = x2 * x3;
-        x7 = x2 * x5;
-        x9 = x2 * x7;
-        x11 = x2 * x9;
-        x13 = x2 * x11;
-        x15 = x2 * x13;
-        _3fac = 6.0;
-        _5fac = 120.0;
-        _7fac = 5040.0;
-        _9fac = 362880.0;
-        _11fac = 39916800.0;
-        _13fac = 6227020800.0;
-        _15fac = 1307674368000.0;
-    in x
-       - x3 / _3fac
-       + x5 / _5fac
-       - x7 / _7fac
-       + x9 / _9fac
-       - x11 / _11fac
-       + x13 / _13fac
-       - x15 / _15fac;
+    let
+      # divide the domain into slices of size pi/2; t \in s * [0, pi/2)
+      s = floor (t * 2.0 / pi);
+
+      # t, wrapped to the range [0, pi/2)
+      t' = t - s * 0.5 * pi;
+
+      # reconstruction of sin(t) from sin(t') depends on the range of t:
+      # - k * [ 0,     pi/2  ) -> sin(t) = sin(t')
+      # - k * [ pi/2,  pi    ) -> sin(t) = sin(pi/2 - t')
+      # - k * [ pi,    3pi/2 ) -> sin(t) = -sin(t')
+      # - k * [ 3pi/2, 2pi   ) -> sin(t) = -sin(pi/2 - t')
+      quadrant = mod s 4;
+      multiplier = if quadrant == 0 || quadrant == 1 then 1 else -1;
+      x = if quadrant == 1 || quadrant == 3 then (pi * 0.5 - t') else t';
+
+      # taylor series approximation
+      x2 = x * x;
+      x3 = x2 * x;
+      x5 = x2 * x3;
+      x7 = x2 * x5;
+      x9 = x2 * x7;
+      x11 = x2 * x9;
+      x13 = x2 * x11;
+      x15 = x2 * x13;
+    in
+      multiplier *
+        (x
+         - x3 / 6.0
+         + x5 / 120.0
+         - x7 / 5040.0
+         + x9 / 362880.0
+         - x11 / 39916800.0
+         + x13 / 6227020800.0
+         - x15 / 1307674368000.0);
 
   cos = t:
-    let x = toFloat t;
-        x2 = x * x;
-        x4 = x2 * x2;
-        x6 = x2 * x4;
-        x8 = x2 * x6;
-        x10 = x2 * x8;
-        x12 = x2 * x10;
-        x14 = x2 * x12;
-        x16 = x2 * x14;
-        _2fac = 2.0;
-        _4fac = 24.0;
-        _6fac = 720.0;
-        _8fac = 40320.0;
-        _10fac = 3628800.0;
-        _12fac = 479001600.0;
-        _14fac = 87178291200.0;
-        _16fac = 20922789888000.0;
-    in 1.0
-       - x2 / _2fac
-       + x4 / _4fac
-       - x6 / _6fac
-       + x8 / _8fac
-       - x10 / _10fac
-       + x12 / _12fac
-       - x14 / _14fac
-       + x16 / _16fac;
+    let
+      # divide the domain into slices of size pi/2; t \in s * [0, pi/2)
+      s = floor (t * 2.0 / pi);
+
+      # t, wrapped to the range [0, pi/2)
+      t' = t - s * 0.5 * pi;
+
+      # reconstruction of cos(t) from cos(t') depends on the range of t:
+      # - k * [ 0,     pi/2  ) -> cos(t) = cos(t')
+      # - k * [ pi/2,  pi    ) -> cos(t) = -cos(pi/2 - t')
+      # - k * [ pi,    3pi/2 ) -> cos(t) = -cos(t')
+      # - k * [ 3pi/2, 2pi   ) -> cos(t) = cos(pi/2 - t')
+      quadrant = mod s 4;
+      multiplier = if quadrant == 0 || quadrant == 3 then 1 else -1;
+      x = if quadrant == 1 || quadrant == 3 then (pi * 0.5 - t') else t';
+
+      # taylor series approximation
+      x2 = x * x;
+      x4 = x2 * x2;
+      x6 = x2 * x4;
+      x8 = x2 * x6;
+      x10 = x2 * x8;
+      x12 = x2 * x10;
+      x14 = x2 * x12;
+      x16 = x2 * x14;
+    in
+      multiplier *
+        (1.0
+         - x2 / 2.0
+         + x4 / 24.0
+         - x6 / 720.0
+         + x8 / 40320.0
+         - x10 / 3628800.0
+         + x12 / 479001600.0
+         - x14 / 87178291200.0
+         + x16 / 20922789888000.0);
 
   /*
   type Complex = { realPart :: float, imagPart :: float }
