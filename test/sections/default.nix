@@ -2,6 +2,7 @@
   bool = import ./bool.nix;
   bits = import ./bits.nix;
   fixpoints = import ./fixpoints.nix;
+  function = import ./function.nix;
   list = import ./list.nix;
   nonempty = import ./nonempty.nix;
   num = import ./num.nix;
