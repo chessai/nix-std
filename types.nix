@@ -96,6 +96,12 @@ rec {
     inherit name check description show;
   };
 
+  any = {
+    name = "any";
+    check = _: true;
+    description = "any value";
+  };
+
   bool = mkType {
     name = "bool";
     description = "boolean";
