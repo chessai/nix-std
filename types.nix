@@ -33,25 +33,6 @@ let
     in imports.string.intercalate " " ([ "{" ] ++ body ++ [ "}" ]);
   showNonEmpty = show: x:
     "nonempty " + showList show (imports.nonempty.toList x);
-  typeShows = imports.set.map (_: imports.nonempty.singleton) {
-    inherit (imports.types) bool float int null list path lambda;
-  } // {
-    set = imports.nonempty.make imports.types.attrs [
-      imports.types.functionSet
-    ];
-    string = imports.nonempty.make imports.types.string [
-      imports.types.path
-    ];
-  };
-  /* showInternal' :: type -> a -> string */
-  showInternal' = type: x: (imports.nonempty.foldl'
-    (c: n: if n.check x then n else c)
-    type).show x;
-  showInternal = x:
-    let
-        typeName = builtins.typeOf x;
-        unknown = imports.nonempty.singleton { show = const "«${typeName}»"; };
-    in showInternal' typeShows.${typeName} or unknown x;
 
   addCheck = type: check: type // {
     check = x: type.check x && check x;
@@ -77,7 +58,25 @@ let
 
 in
 rec {
-  show = showInternal;
+  /* show :: a -> string */
+  show = x: (imports.types.of x).show x;
+
+  /* of :: a -> type */
+  of = let
+    types = imports.set.map (_: imports.nonempty.singleton) {
+      inherit (imports.types) bool float int null list path lambda;
+    } // {
+      set = imports.nonempty.make imports.types.attrs [
+        imports.types.functionSet
+      ];
+      string = imports.nonempty.make imports.types.string [
+        imports.types.path
+      ];
+    };
+    findType = types: x: (imports.nonempty.foldl'
+      (c: n: if n.check x then n else c)
+      types);
+  in x: findType types.${builtins.typeOf x} or (imports.nonempty.singleton imports.types.any) x;
 
   /*
   type Type = {
@@ -91,9 +90,15 @@ rec {
     name,
     check,
     description,
-    show ? showInternal
+    show ? imports.types.show
   }: {
     inherit name check description show;
+  };
+
+  any = mkType {
+    name = "any";
+    description = "any value";
+    check = const true;
   };
 
   bool = mkType {
