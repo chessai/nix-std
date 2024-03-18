@@ -36,7 +36,10 @@ in rec {
         else tomlEscapeValue v;
 
       # Render an inline TOML "key = value" pair
-      tomlKV = k: v: "${tomlEscapeKey k} = ${tomlValue v}";
+      tomlKV = k: v: 
+        if v == null
+          then "" 
+          else "${tomlEscapeKey k} = ${tomlValue v}";
 
       # Turn a prefix like [ "foo" "bar" ] into an escaped header value like
       # "foo.bar"
