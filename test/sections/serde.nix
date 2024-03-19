@@ -25,6 +25,8 @@ section "std.serde" {
       (checkRoundtripTOML { foo = [{ bar = 1; } { bar = [{ quux = 2; }]; }]; })
       # mixing dot notation and list notation
       (checkRoundtripTOML { foo.bar.baz = [{ bar = 1; } { bar = [{ quux = 2; }]; }]; })
+      # filters nulls
+      (assertEqual (serde.fromTOML (serde.toTOML { foo = 1; bar = null; })) { foo = 1; })
     ];
 
   json =
