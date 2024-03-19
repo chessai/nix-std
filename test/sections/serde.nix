@@ -10,8 +10,7 @@ let
 in
 section "std.serde" {
   toml =
-    string.unlines 
-      [
+    string.unlines [
         # basic k = v notation
         (checkRoundtripTOML { foo = 1; })
         # inline JSON-like literals
